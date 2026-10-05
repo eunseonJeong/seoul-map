@@ -1,0 +1,127 @@
+[
+  {
+    "code": "11680",
+    "name": "강남구",
+    "nameEng": "Gangnam-gu"
+  },
+  {
+    "code": "11650",
+    "name": "서초구",
+    "nameEng": "Seocho-gu"
+  },
+  {
+    "code": "11710",
+    "name": "송파구",
+    "nameEng": "Songpa-gu"
+  },
+  {
+    "code": "11170",
+    "name": "용산구",
+    "nameEng": "Yongsan-gu"
+  },
+  {
+    "code": "11200",
+    "name": "성동구",
+    "nameEng": "Seongdong-gu"
+  },
+  {
+    "code": "11440",
+    "name": "마포구",
+    "nameEng": "Mapo-gu"
+  },
+  {
+    "code": "11215",
+    "name": "광진구",
+    "nameEng": "Gwangjin-gu"
+  },
+  {
+    "code": "11470",
+    "name": "양천구",
+    "nameEng": "Yangcheon-gu"
+  },
+  {
+    "code": "11560",
+    "name": "영등포구",
+    "nameEng": "Yeongdeungpo-gu"
+  },
+  {
+    "code": "11590",
+    "name": "동작구",
+    "nameEng": "Dongjak-gu"
+  },
+  {
+    "code": "11740",
+    "name": "강동구",
+    "nameEng": "Gangdong-gu"
+  },
+  {
+    "code": "11110",
+    "name": "종로구",
+    "nameEng": "Jongno-gu"
+  },
+  {
+    "code": "11140",
+    "name": "중구",
+    "nameEng": "Jung-gu"
+  },
+  {
+    "code": "11410",
+    "name": "서대문구",
+    "nameEng": "Seodaemun-gu"
+  },
+  {
+    "code": "11500",
+    "name": "강서구",
+    "nameEng": "Gangseo-gu"
+  },
+  {
+    "code": "11230",
+    "name": "동대문구",
+    "nameEng": "Dongdaemun-gu"
+  },
+  {
+    "code": "11290",
+    "name": "성북구",
+    "nameEng": "Seongbuk-gu"
+  },
+  {
+    "code": "11380",
+    "name": "은평구",
+    "nameEng": "Eunpyeong-gu"
+  },
+  {
+    "code": "11620",
+    "name": "관악구",
+    "nameEng": "Gwanak-gu"
+  },
+  {
+    "code": "11530",
+    "name": "구로구",
+    "nameEng": "Guro-gu"
+  },
+  {
+    "code": "11350",
+    "name": "노원구",
+    "nameEng": "Nowon-gu"
+  },
+  {
+    "code": "11260",
+    "name": "중랑구",
+    "nameEng": "Jungnang-gu"
+  },
+  {
+    "code": "11305",
+    "name": "강북구",
+    "nameEng": "Gangbuk-gu"
+  },
+  {
+    "code": "11545",
+    "name": "금천구",
+    "nameEng": "Geumcheon-gu"
+  },
+  {
+    "code": "11320",
+    "name": "도봉구",
+    "nameEng": "Dobong-gu"
+  }
+]

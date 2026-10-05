@@ -8,6 +8,34 @@
       "when": 1791163428572,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791164365457,
+      "tag": "0001_real_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791166890566,
+      "tag": "0002_district_population",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791167976222,
+      "tag": "0003_district_stat",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791168644689,
+      "tag": "0004_district_news",
+      "breakpoints": true
     }
   ]
 }
