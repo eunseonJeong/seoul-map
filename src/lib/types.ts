@@ -74,3 +74,28 @@ export interface WatchItem {
   memo: string
   createdAt: string
 }
+
+// 임장 노트 (visit_note 테이블)
+export interface VisitNote {
+  id: string
+  visitDate: string // YYYY-MM-DD
+  complexId: string | null // 등록된 단지와 연결하면 상세 페이지 링크가 생긴다
+  complexName: string
+  location: string // 구·동 (예: 강남구 대치동)
+  area: number | null // 전용 ㎡
+  askingPrice: number | null // 호가, 만원
+  dealPrice: number | null // 최근 실거래가, 만원
+  walkMinutes: number | null // 역까지 도보, 분
+  orientation: string // 동 배치·향
+  parking: string
+  maintenance: string // 단지 관리 상태
+  surroundings: string // 주변 상권·학군
+  pros: string
+  cons: string
+  rating: number // 1~5
+  memo: string
+  createdAt: string // ISO
+  updatedAt: string // ISO
+}
+
+export type VisitInput = Omit<VisitNote, "id" | "createdAt" | "updatedAt">

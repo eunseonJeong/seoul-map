@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 const LINKS = [
   { href: "/", label: "지도" },
   { href: "/watchlist", label: "관심 단지" },
+  { href: "/visits", label: "임장" },
   { href: "/districts", label: "구별 시세" },
 ]
 
