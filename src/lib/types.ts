@@ -21,16 +21,17 @@ export interface District {
   code: string // 법정동 시군구 코드 (예: 11680)
   name: string // 강남구
   nameEng: string
-  summary: string // 한 줄 특징 (사용자가 수정 가능)
-  population: number // 명
+  summary: string // 한 줄 소개 (사용자가 직접 쓴다)
+  population: number | null // 주민등록 인구, 명
+  populationMonth: string | null // 인구 기준월 YYYY-MM
   salePerPyeong: number // 최근 월 3.3㎡당 매매가, 만원
   jeonsePerPyeong: number
   jeonseRatio: number // %
   change3m: number // %
   change12m: number // %
-  weeklyChange: number // % (R-ONE 주간 변동률)
+  weeklyChange: number | null // % (R-ONE 주간 변동률, 연결 전에는 null)
   trend: MonthlyPoint[]
-  features: DistrictFeatures
+  features: DistrictFeatures // 사용자가 직접 쓴다
 }
 
 export interface Complex {
@@ -39,11 +40,11 @@ export interface Complex {
   districtCode: string
   dong: string
   address: string
-  builtYear: number
-  households: number
-  lat: number
-  lng: number
-  areas: number[] // 전용 ㎡
+  builtYear: number | null
+  households: number | null // 실거래 자료에 없음 (공동주택 기본정보 연결 전 null)
+  lat: number | null // 좌표 (지오코딩 연결 전 null)
+  lng: number | null
+  areas: number[] // 전용 ㎡ (소수점 버림: 84.97 → 84)
 }
 
 export interface Trade {
@@ -53,13 +54,14 @@ export interface Trade {
   floor: number
   price: number // 매매가 또는 전세 보증금, 만원
   contractDate: string // YYYY-MM-DD
-  isCancelled: boolean
+  isCancelled: boolean // 매매 해제
+  isRenewal: boolean // 전세 갱신 계약
 }
 
 export interface AreaMonthly {
   month: string
-  sale: number | null // 월 중위가, 만원
-  jeonse: number | null
+  sale: number | null // 월 중위가, 만원 (해제 거래 제외)
+  jeonse: number | null // 갱신 계약 제외
   saleCount: number
   jeonseCount: number
 }
@@ -99,3 +101,36 @@ export interface VisitNote {
 }
 
 export type VisitInput = Omit<VisitNote, "id" | "createdAt" | "updatedAt">
+
+// 구 패널용 요약: 거래가 많은 단지, 관련 기사, 생활 인프라 통계
+export interface ComplexSummary {
+  id: string
+  name: string
+  dong: string
+  builtYear: number | null
+  saleCount: number // 최근 12개월 매매 건수
+}
+
+export interface DistrictNewsItem {
+  title: string
+  description: string
+  url: string
+  publishedAt: string // ISO
+}
+
+export interface DistrictStat {
+  subwayStations: number | null
+  subwayLines: string[]
+  elementarySchools: number | null
+  middleSchools: number | null
+  highSchools: number | null
+  academies: number | null
+  tutoringCenters: number | null
+  examAcademies: number | null
+}
+
+export interface DistrictHighlights {
+  complexes: ComplexSummary[]
+  news: DistrictNewsItem[]
+  stat: DistrictStat | null
+}

@@ -7,7 +7,8 @@ import { toast } from "sonner"
 import { Change, ChangePill } from "@/components/change"
 import { Segmented } from "@/components/segmented"
 import { areaLabel, changePct, formatPrice } from "@/lib/format"
-import { useWatchlist } from "@/lib/local-store"
+import { useRouter } from "next/navigation"
+import { useWatchlist } from "@/lib/watchlist-store"
 import { cn } from "@/lib/utils"
 import type { Complex, DealType, District, WatchItem } from "@/lib/types"
 
@@ -20,15 +21,18 @@ export type PriceSnapshot = {
 type Sort = "up" | "down" | "recent"
 
 export function WatchlistView({
+  initialItems,
   complexes,
   districts,
   prices,
 }: {
+  initialItems: WatchItem[]
   complexes: Complex[]
   districts: District[]
   prices: Record<string, PriceSnapshot>
 }) {
-  const { items, add, remove, updateMemo } = useWatchlist()
+  const { items, add, remove, updateMemo } = useWatchlist(initialItems)
+  const router = useRouter()
   const [dealType, setDealType] = useState<DealType>("sale")
   const [sort, setSort] = useState<Sort>("up")
 
@@ -59,7 +63,8 @@ export function WatchlistView({
   function handleRemove(w: WatchItem, name: string) {
     remove(w.id)
     toast(`${name} ${w.area}㎡를 뺐습니다.`, {
-      action: { label: "되돌리기", onClick: () => add(w) },
+      // 되돌리면 새로 등록되므로 가격 정보를 다시 읽는다
+      action: { label: "되돌리기", onClick: () => add(w).then(() => router.refresh()) },
     })
   }
 
