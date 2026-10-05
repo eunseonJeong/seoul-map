@@ -63,7 +63,7 @@ export function ComplexView({
           {watch ? (
             <Button
               variant="secondary"
-              className="h-8 rounded-full px-4 text-[13px]"
+              className="h-8 px-4 text-[13px]"
               onClick={() => {
                 remove(watch.id)
                 toast(`${complex.name} ${area}㎡ 관심을 해제했습니다.`)
@@ -283,7 +283,7 @@ function WatchDialog({
           className="rounded-xl"
         />
         <DialogFooter>
-          <Button className="h-10 w-full rounded-full text-[15px]" onClick={() => onConfirm(memo.trim())}>
+          <Button className="h-10 w-full text-[15px]" onClick={() => onConfirm(memo.trim())}>
             체크하기
           </Button>
         </DialogFooter>

@@ -60,7 +60,7 @@ export function VisitsView({ initialVisits, complexes }: { initialVisits: VisitN
                 { value: "price", label: "호가 낮은순" },
               ]}
             />
-            <Button onClick={() => setEditing("new")} className="h-9 rounded-full px-4">
+            <Button onClick={() => setEditing("new")} className="h-9 px-4">
               <PlusIcon /> 임장 기록 추가
             </Button>
           </div>
