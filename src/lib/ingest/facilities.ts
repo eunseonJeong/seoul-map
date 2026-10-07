@@ -37,6 +37,22 @@ async function fetchStations(): Promise<StationRow[]> {
   return body.row
 }
 
+// 운영 구간명 → 승객이 쓰는 노선명 (같은 노선이 구간별로 다르게 적혀 있다)
+const LINE_ALIASES: Record<string, string> = {
+  경부선: "1호선",
+  경원선: "1호선",
+  경인선: "1호선",
+  중앙선: "경의중앙선",
+  공항철도1호선: "공항철도",
+  "수도권 광역급행철도": "GTX-A",
+}
+const lineName = (route: string) => {
+  const base = route.replace(/\(연장.*?\)$/, "").trim() // 9호선(연장) → 9호선
+  return LINE_ALIASES[base] ?? base
+}
+// 같은 역이 노선마다 '서울역/서울', '삼성(무역센터)/삼성'처럼 다르게 적혀 있다
+const stationName = (name: string) => name.replace(/\(.*?\)/g, "").replace(/역$/, "").trim()
+
 /** 구 이름별 { 역 이름 집합, 노선 집합 } */
 export async function collectStations() {
   const byGu = new Map<string, { stations: Set<string>; lines: Set<string> }>()
@@ -45,8 +61,8 @@ export async function collectStations() {
     const gu = guFeatures.find((f: GuFeature) => geoContains(f, point))
     if (!gu) continue // 서울 밖 역
     const entry = byGu.get(gu.properties.name) ?? { stations: new Set(), lines: new Set() }
-    entry.stations.add(row.BLDN_NM)
-    entry.lines.add(row.ROUTE)
+    entry.stations.add(stationName(row.BLDN_NM))
+    entry.lines.add(lineName(row.ROUTE))
     byGu.set(gu.properties.name, entry)
   }
   return byGu

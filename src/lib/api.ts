@@ -184,9 +184,16 @@ function loadHighlights() {
     }
     return out
   })()
-  value.catch(() => (highlightsCache = null))
-  highlightsCache = { at: Date.now(), value }
-  return value
+  // 조회가 멈추면 그 결과를 계속 재사용하지 않도록 15초 안에 끝나지 않으면 버린다
+  const guarded = Promise.race([
+    value,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("구 패널 집계 시간 초과")), 15_000)),
+  ])
+  guarded.catch(() => {
+    if (highlightsCache?.value === guarded) highlightsCache = null
+  })
+  highlightsCache = { at: Date.now(), value: guarded }
+  return guarded
 }
 
 export async function getDistrictHighlights(): Promise<Record<string, DistrictHighlights>> {
