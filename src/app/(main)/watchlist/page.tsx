@@ -3,7 +3,7 @@ import { latestPrice } from "@/lib/price"
 import { requireUser } from "@/lib/users"
 import { WatchlistView, type PriceSnapshot } from "./watchlist-view"
 
-export const metadata = { title: "관심 단지 · 서울 부동산" }
+export const metadata = { title: "관심 단지 · 모두 부동산" }
 
 export default async function WatchlistPage() {
   const user = await requireUser()

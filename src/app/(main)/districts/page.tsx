@@ -2,7 +2,7 @@ import { getDataAsOf, getDistricts } from "@/lib/api"
 import { requireUser } from "@/lib/users"
 import { DistrictsView } from "./districts-view"
 
-export const metadata = { title: "구별 시세 · 서울 부동산" }
+export const metadata = { title: "구별 시세 · 모두 부동산" }
 
 export default async function DistrictsPage() {
   const user = await requireUser()

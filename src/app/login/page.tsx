@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { LoginForm } from "./login-form"
 
-export const metadata = { title: "로그인 · 서울 부동산" }
+export const metadata = { title: "로그인 · 모두 부동산" }
 
 export default function LoginPage() {
   return (
