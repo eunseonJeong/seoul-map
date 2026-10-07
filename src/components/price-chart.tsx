@@ -33,7 +33,7 @@ export function Sparkline({ data, className }: { data: { month: string; sale: nu
             />
           }
         />
-        <Area dataKey="sale" type="monotone" stroke={SALE} strokeWidth={2} fill="url(#spark-fill)" />
+        <Area animationDuration={700} animationEasing="ease-out" dataKey="sale" type="monotone" stroke={SALE} strokeWidth={2} fill="url(#spark-fill)" />
       </AreaChart>
     </ChartContainer>
   )
@@ -88,8 +88,8 @@ export function PriceHistoryChart({
             />
           }
         />
-        <Line dataKey="sale" type="monotone" stroke={SALE} strokeWidth={2.25} dot={false} connectNulls activeDot={{ r: 4 }} />
-        <Line dataKey="jeonse" type="monotone" stroke={JEONSE} strokeWidth={2.25} dot={false} connectNulls activeDot={{ r: 4 }} />
+        <Line animationDuration={700} animationEasing="ease-out" dataKey="sale" type="monotone" stroke={SALE} strokeWidth={2.25} dot={false} connectNulls activeDot={{ r: 4 }} />
+        <Line animationDuration={700} animationEasing="ease-out" dataKey="jeonse" type="monotone" stroke={JEONSE} strokeWidth={2.25} dot={false} connectNulls activeDot={{ r: 4 }} />
       </LineChart>
     </ChartContainer>
   )

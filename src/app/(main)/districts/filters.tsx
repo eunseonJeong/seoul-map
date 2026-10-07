@@ -5,7 +5,7 @@ import { CheckIcon, ChevronDownIcon } from "lucide-react"
 import { PILL_TRIGGER } from "@/components/calendar"
 import { cn } from "@/lib/utils"
 
-const POPUP = "z-50 rounded-2xl bg-popover p-2 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none dark:ring-1 dark:ring-foreground/10"
+const POPUP = "z-50 rounded-2xl bg-popover p-2 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none dark:ring-1 dark:ring-foreground/10 origin-(--transform-origin) transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.34,1.36,0.64,1)] data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 data-ending-style:duration-100 data-ending-style:ease-out motion-reduce:transition-none"
 
 /** 구 다중 선택. 아무것도 고르지 않으면 전체 */
 export function DistrictSelect({

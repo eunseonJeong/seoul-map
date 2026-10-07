@@ -14,7 +14,7 @@ export const PILL_TRIGGER =
 /** 폼 입력칸 (Input 과 같은 모양) */
 const FIELD_TRIGGER =
   "flex h-8 w-full items-center gap-2 rounded-lg border border-input bg-transparent px-2.5 text-left text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-const POPUP = "z-50 rounded-2xl bg-popover p-3 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none dark:ring-1 dark:ring-foreground/10"
+const POPUP = "z-50 rounded-2xl bg-popover p-3 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none dark:ring-1 dark:ring-foreground/10 origin-(--transform-origin) transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.34,1.36,0.64,1)] data-starting-style:scale-95 data-starting-style:opacity-0 data-ending-style:scale-95 data-ending-style:opacity-0 data-ending-style:duration-100 data-ending-style:ease-out motion-reduce:transition-none"
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"]
 
 const pad = (n: number) => String(n).padStart(2, "0")

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ChevronRightIcon } from "lucide-react"
 import { MapExplorer } from "@/components/map-explorer"
+import { CountUp, Reveal, TiltCard } from "@/components/motion"
 import { Change } from "@/components/change"
 import {
   getComplexesByIds,
@@ -62,14 +63,15 @@ export default async function HomePage() {
           <h2 className="text-center text-[28px] leading-tight font-semibold sm:text-[40px]">이번 달 눈여겨볼 곳.</h2>
           {/* 모바일에서도 네 장을 한눈에: 2×2 */}
           <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-5 lg:grid-cols-4">
-            <Tile eyebrow="서울 평균" title={formatManwon(seoulAvg)} caption="3.3㎡당 매매 · 25개 구 평균" />
+            <Tile index={0} eyebrow="서울 평균" title={<CountUp value={seoulAvg} suffix="만" />} caption="3.3㎡당 매매 · 25개 구 평균" />
             <Tile
+              index={1}
               eyebrow="1년 상승률 1위"
               title={topGrowth.name}
               caption={<Change value={topGrowth.change12m} />}
             />
-            <Tile eyebrow="가장 비싼 구" title={topPrice.name} caption={`3.3㎡당 ${formatManwon(topPrice.salePerPyeong)}`} />
-            <Tile eyebrow="전세가율 1위" title={topJeonse.name} caption={`${topJeonse.jeonseRatio.toFixed(1)}%`} />
+            <Tile index={2} eyebrow="가장 비싼 구" title={topPrice.name} caption={`3.3㎡당 ${formatManwon(topPrice.salePerPyeong)}`} />
+            <Tile index={3} eyebrow="전세가율 1위" title={topJeonse.name} caption={`${topJeonse.jeonseRatio.toFixed(1)}%`} />
           </div>
         </div>
       </section>
@@ -77,12 +79,24 @@ export default async function HomePage() {
   )
 }
 
-function Tile({ eyebrow, title, caption }: { eyebrow: string; title: string; caption: React.ReactNode }) {
+function Tile({
+  index,
+  eyebrow,
+  title,
+  caption,
+}: {
+  index: number
+  eyebrow: string
+  title: React.ReactNode
+  caption: React.ReactNode
+}) {
   return (
-    <div className="rounded-[20px] bg-muted px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-8">
-      <p className="text-[12px] font-medium text-muted-foreground sm:text-[13px]">{eyebrow}</p>
-      <p className="tabular mt-1 text-[20px] leading-tight font-semibold sm:mt-2 sm:text-[28px]">{title}</p>
-      <p className="mt-1 text-[13px] text-foreground/80 sm:mt-2 sm:text-[15px]">{caption}</p>
-    </div>
+    <Reveal delay={index * 0.08} className="h-full">
+      <TiltCard className="h-full rounded-[20px] bg-muted px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-8">
+        <p className="text-[12px] font-medium text-muted-foreground sm:text-[13px]">{eyebrow}</p>
+        <p className="tabular mt-1 text-[20px] leading-tight font-semibold sm:mt-2 sm:text-[28px]">{title}</p>
+        <p className="mt-1 text-[13px] text-foreground/80 sm:mt-2 sm:text-[15px]">{caption}</p>
+      </TiltCard>
+    </Reveal>
   )
 }

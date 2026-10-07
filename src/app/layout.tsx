@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider } from "@/components/theme-provider"
+import { MotionProvider } from "@/components/motion"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ko" className="h-full" suppressHydrationWarning>
       <body className="flex min-h-full flex-col bg-background">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-          <TooltipProvider>{children}</TooltipProvider>
+          <MotionProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </MotionProvider>
           <Toaster position="top-center" />
         </ThemeProvider>
       </body>

@@ -83,7 +83,7 @@ export function ComplexNameInput({
         <ul
           id={listId}
           role="listbox"
-          className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl bg-popover p-1 shadow-[0_8px_30px_rgba(0,0,0,0.16)] dark:ring-1 dark:ring-foreground/10"
+          className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl bg-popover p-1 shadow-[0_8px_30px_rgba(0,0,0,0.16)] duration-150 animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 origin-top motion-reduce:animate-none dark:ring-1 dark:ring-foreground/10"
         >
           <li className="px-3 pt-1.5 pb-1 text-[11px] font-medium text-muted-foreground">관심 단지</li>
           {filtered.map((o, i) => (
