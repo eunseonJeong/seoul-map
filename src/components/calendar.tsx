@@ -10,11 +10,11 @@ import { cn } from "@/lib/utils"
 
 /** 둥근 회색 알약 (필터 줄) */
 export const PILL_TRIGGER =
-  "inline-flex h-10 items-center justify-center gap-2 rounded-full bg-black/[0.06] px-4 text-[14px] outline-none transition hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-ring"
+  "inline-flex h-10 items-center justify-center gap-2 rounded-full bg-foreground/[0.06] px-4 text-[14px] outline-none transition hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring"
 /** 폼 입력칸 (Input 과 같은 모양) */
 const FIELD_TRIGGER =
   "flex h-8 w-full items-center gap-2 rounded-lg border border-input bg-transparent px-2.5 text-left text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-const POPUP = "z-50 rounded-2xl bg-white p-3 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none"
+const POPUP = "z-50 rounded-2xl bg-popover p-3 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none dark:ring-1 dark:ring-foreground/10"
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"]
 
 const pad = (n: number) => String(n).padStart(2, "0")
@@ -105,7 +105,7 @@ export function DatePicker({
                     onClick={() => pick(ymd)}
                     className={cn(
                       "tabular mx-auto grid size-9 place-items-center rounded-full text-[14px] transition",
-                      selected ? "bg-foreground font-medium text-background" : "hover:bg-black/[0.06]",
+                      selected ? "bg-foreground font-medium text-background" : "hover:bg-foreground/[0.06]",
                       !selected && ymd === today && "font-semibold text-link",
                       !selected && i % 7 === 0 && ymd !== today && "text-up/80",
                       disabled && "pointer-events-none text-foreground/25",
@@ -120,7 +120,7 @@ export function DatePicker({
               <button
                 type="button"
                 onClick={() => pick(today)}
-                className="mt-2 h-8 w-full rounded-full text-[13px] text-link transition hover:bg-black/[0.04]"
+                className="mt-2 h-8 w-full rounded-full text-[13px] text-link transition hover:bg-foreground/[0.04]"
               >
                 오늘
               </button>
@@ -190,7 +190,7 @@ export function MonthPicker({
                     }}
                     className={cn(
                       "h-9 rounded-full text-[14px] transition",
-                      active ? "bg-foreground font-medium text-background" : "hover:bg-black/[0.06]",
+                      active ? "bg-foreground font-medium text-background" : "hover:bg-foreground/[0.06]",
                       disabled && "pointer-events-none text-foreground/25",
                     )}
                   >
@@ -221,7 +221,7 @@ function Header({
   nextLabel: string
 }) {
   const btn =
-    "flex size-8 items-center justify-center rounded-full transition hover:bg-black/[0.06] disabled:pointer-events-none disabled:opacity-25"
+    "flex size-8 items-center justify-center rounded-full transition hover:bg-foreground/[0.06] disabled:pointer-events-none disabled:opacity-25"
   return (
     <div className="flex items-center justify-between">
       <button type="button" aria-label={prevLabel} disabled={!onPrev} onClick={onPrev} className={btn}>

@@ -52,7 +52,7 @@ export function ComplexView({
   return (
     <>
       {/* 애플식 로컬 내비게이션 */}
-      <div className="sticky top-12 z-30 border-b border-black/5 bg-white/80 backdrop-blur-xl">
+      <div className="sticky top-12 z-30 border-b border-foreground/5 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-13 max-w-[1024px] items-center justify-between gap-3 px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-2">
             <Link href="/" aria-label="지도로" className="-ml-1 text-muted-foreground hover:text-foreground">
@@ -134,8 +134,8 @@ export function ComplexView({
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[24px] font-semibold">실거래가 추이</h2>
             <div className="flex items-center gap-4 text-[13px] text-muted-foreground">
-              <Legend color="#0071e3" label="매매" />
-              <Legend color="#86868b" label="전세" />
+              <Legend color="var(--chart-sale)" label="매매" />
+              <Legend color="var(--chart-jeonse)" label="전세" />
               <span>월 중위가</span>
             </div>
           </div>

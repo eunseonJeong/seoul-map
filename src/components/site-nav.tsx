@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { LogOutIcon } from "lucide-react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 
 const LINKS = [
@@ -31,7 +32,7 @@ export function SiteNav({ nickname }: { nickname: string }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-black/5 bg-[#fbfbfd]/80 backdrop-blur-xl backdrop-saturate-150">
+    <header className="sticky top-0 z-40 border-b border-foreground/5 bg-(--nav) backdrop-blur-xl backdrop-saturate-150">
       <nav className="mx-auto flex h-12 max-w-[1024px] items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
           <span className="grid size-6 place-items-center rounded-[7px] bg-foreground text-[11px] font-bold text-background">
@@ -59,11 +60,12 @@ export function SiteNav({ nickname }: { nickname: string }) {
         </ul>
         <div className="flex items-center gap-1">
           <span className="hidden max-w-24 truncate text-[13px] text-foreground/60 sm:inline">{nickname}</span>
+          <ThemeToggle />
           <button
             onClick={() => setConfirmLogout(true)}
             aria-label="로그아웃"
             title="로그아웃"
-            className="grid size-8 place-items-center rounded-full text-foreground/60 transition-colors hover:bg-black/5 hover:text-foreground"
+            className="grid size-8 place-items-center rounded-full text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground"
           >
             <LogOutIcon className="size-4" />
           </button>

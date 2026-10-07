@@ -55,7 +55,7 @@ export function MapExplorer({
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-        <div className="rounded-[28px] bg-white p-4 sm:p-6">
+        <div className="rounded-[28px] bg-background p-4 sm:p-6">
           <SeoulMap
             districts={districts}
             metric={metric}
@@ -85,7 +85,7 @@ export function MapExplorer({
         </div>
 
         {/* 데스크톱: 패널 높이를 지도 카드에 맞추고 안에서 스크롤 */}
-        <aside ref={panelRef} className="relative scroll-mt-16 overflow-hidden rounded-[28px] bg-white">
+        <aside ref={panelRef} className="relative scroll-mt-16 overflow-hidden rounded-[28px] bg-background">
           <div className="p-6 lg:absolute lg:inset-0 lg:overflow-y-auto">
           {district ? (
             <DistrictPanel

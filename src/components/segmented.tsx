@@ -21,7 +21,7 @@ export function Segmented<T extends string>({
     <Tabs value={value} onValueChange={(v) => onChange(v as T)} className={className}>
       <TabsList
         className={cn(
-          "rounded-full bg-black/[0.06] p-1",
+          "rounded-full bg-foreground/[0.06] p-1",
           size === "sm" ? "h-8!" : "h-10!",
         )}
       >

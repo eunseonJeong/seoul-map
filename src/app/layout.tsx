@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next"
+import { ThemeProvider } from "next-themes"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
@@ -15,10 +16,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className="h-full">
+    // next-themes 가 그리기 전에 html 에 dark 클래스를 붙이므로 경고를 끈다
+    <html lang="ko" className="h-full" suppressHydrationWarning>
       <body className="flex min-h-full flex-col bg-background">
-        <TooltipProvider>{children}</TooltipProvider>
-        <Toaster theme="light" position="top-center" />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster position="top-center" />
+        </ThemeProvider>
       </body>
     </html>
   )

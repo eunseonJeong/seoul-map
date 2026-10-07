@@ -5,8 +5,9 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { formatManwon, formatPrice, monthLabel } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
-const SALE = "#0071e3"
-const JEONSE = "#86868b"
+// 색은 globals.css 토큰 (라이트·다크 각각 정의)
+const SALE = "var(--chart-sale)"
+const JEONSE = "var(--chart-jeonse)"
 
 /** 구 카드용 작은 추이 (3.3㎡당 매매) */
 export function Sparkline({ data, className }: { data: { month: string; sale: number }[]; className?: string }) {
@@ -54,7 +55,7 @@ export function PriceHistoryChart({
   return (
     <ChartContainer config={config} className="aspect-auto h-72 w-full sm:h-80">
       <LineChart data={data} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
-        <CartesianGrid vertical={false} strokeDasharray="0" stroke="#e8e8ed" />
+        <CartesianGrid vertical={false} strokeDasharray="0" stroke="var(--chart-grid)" />
         <XAxis
           dataKey="month"
           tickLine={false}

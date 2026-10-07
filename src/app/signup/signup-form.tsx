@@ -88,7 +88,7 @@ export function SignupForm() {
         label="닉네임"
         hint={
           nicknameState.status === "ok" ? (
-            <span className="text-[#1f9a55]">사용 가능한 닉네임입니다.</span>
+            <span className="text-success">사용 가능한 닉네임입니다.</span>
           ) : nicknameState.status === "checking" ? (
             <span className="text-muted-foreground">확인하는 중…</span>
           ) : nicknameState.status === "error" ? (

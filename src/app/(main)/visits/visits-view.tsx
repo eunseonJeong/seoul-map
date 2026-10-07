@@ -84,7 +84,7 @@ export function VisitsView({
             <div className="mt-5 overflow-x-auto rounded-[24px] bg-muted">
               <table className="tabular w-full min-w-[760px] text-[14px]">
                 <thead>
-                  <tr className="border-b border-black/5 text-left text-[12px] text-muted-foreground">
+                  <tr className="border-b border-foreground/5 text-left text-[12px] text-muted-foreground">
                     <th className="px-5 py-3 font-medium">임장일</th>
                     <th className="px-3 py-3 font-medium">단지</th>
                     <th className="px-3 py-3 font-medium">면적</th>
@@ -100,7 +100,7 @@ export function VisitsView({
                     <tr
                       key={v.id}
                       onClick={() => setEditing(v)}
-                      className="cursor-pointer border-b border-black/5 align-top transition last:border-0 hover:bg-black/[0.03]"
+                      className="cursor-pointer border-b border-foreground/5 align-top transition last:border-0 hover:bg-foreground/[0.03]"
                     >
                       <td className="px-5 py-3.5 whitespace-nowrap text-muted-foreground">{v.visitDate}</td>
                       <td className="px-3 py-3.5">
@@ -148,7 +148,7 @@ function Stars({ value }: { value: number }) {
   return (
     <span className="inline-flex" aria-label={`별점 ${value}점`}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <StarIcon key={n} className={cn("size-3.5", n <= value ? "fill-amber-400 text-amber-400" : "text-black/15")} />
+        <StarIcon key={n} className={cn("size-3.5", n <= value ? "fill-amber-400 text-amber-400" : "text-foreground/15")} />
       ))}
     </span>
   )
@@ -318,9 +318,9 @@ function VisitForm({
                 onClick={() => set("rating", n)}
                 aria-label={`${n}점`}
                 aria-pressed={form.rating === n}
-                className="grid size-8 place-items-center rounded-full transition hover:bg-black/5"
+                className="grid size-8 place-items-center rounded-full transition hover:bg-foreground/5"
               >
-                <StarIcon className={cn("size-5", n <= form.rating ? "fill-amber-400 text-amber-400" : "text-black/20")} />
+                <StarIcon className={cn("size-5", n <= form.rating ? "fill-amber-400 text-amber-400" : "text-foreground/20")} />
               </button>
             ))}
           </div>

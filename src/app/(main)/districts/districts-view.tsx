@@ -67,7 +67,7 @@ export function DistrictsView({ districts, asOf }: { districts: District[]; asOf
               title="검색 조건 초기화"
               onClick={reset}
               disabled={isDefault}
-              className="flex size-10 items-center justify-center rounded-full bg-black/[0.06] text-foreground/70 transition hover:bg-black/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+              className="flex size-10 items-center justify-center rounded-full bg-foreground/[0.06] text-foreground/70 transition hover:bg-foreground/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
             >
               <RotateCcwIcon className="size-4" />
             </button>

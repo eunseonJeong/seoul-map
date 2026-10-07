@@ -35,7 +35,7 @@ export default async function HomePage() {
   return (
     <>
       <section className="px-4 pt-14 pb-12 text-center sm:pt-20">
-        <p className="text-[14px] font-semibold text-[#bf4800]">{monthLong(asOf)} 기준</p>
+        <p className="text-[14px] font-semibold text-highlight">{monthLong(asOf)} 기준</p>
         {/* <p className="mt-1 text-[12px] text-muted-foreground">
           실거래는 계약 후 30일 안에 신고되므로, 신고 기한이 지나 거래가 모두 모인 가장 최근 달을 기준으로 합니다.
         </p> */}

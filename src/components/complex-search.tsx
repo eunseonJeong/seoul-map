@@ -43,10 +43,10 @@ export function ComplexSearch() {
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="단지·동 검색"
         aria-label="단지 검색"
-        className="h-10 w-full rounded-full bg-black/[0.06] pr-4 pl-10 text-[14px] outline-none placeholder:text-muted-foreground focus:bg-white focus:ring-4 focus:ring-primary/15"
+        className="h-10 w-full rounded-full bg-foreground/[0.06] pr-4 pl-10 text-[14px] outline-none placeholder:text-muted-foreground focus:bg-popover focus:ring-4 focus:ring-primary/15"
       />
       {open && q.trim() && (
-        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl bg-popover shadow-xl ring-1 ring-foreground/5">
           {results === null ? (
             <p className="px-4 py-3 text-[13px] text-muted-foreground">찾는 중…</p>
           ) : results.length === 0 ? (

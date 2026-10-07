@@ -10,11 +10,12 @@ import type { DistrictRow } from "./rows"
 
 type Metric = "salePerPyeong" | "jeonsePerPyeong" | "jeonseRatio" | "periodChange"
 
-const SALE = "#0071e3"
-const UP = "#d70015"
-const DOWN = "#0a5bd3"
+// 색은 globals.css 토큰 (라이트·다크 각각 정의)
+const SALE = "var(--chart-sale)"
+const UP = "var(--up)"
+const DOWN = "var(--down)"
 // 추이선 색 (고정 순서, 색맹 검증 통과). 구가 이보다 많으면 추이는 그리지 않는다
-const SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#4a3aa7"]
+const SERIES = [1, 2, 3, 4, 5, 6].map((i) => `var(--series-${i})`)
 
 const METRIC_FORMAT: Record<Metric, (v: number) => string> = {
   salePerPyeong: formatManwon,
@@ -73,7 +74,7 @@ export function DistrictCharts({
               <XAxis type="number" hide domain={metric === "periodChange" ? ["auto", "auto"] : [0, "auto"]} />
               <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={64} interval={0} />
               <ChartTooltip
-                cursor={{ fill: "rgba(0,0,0,0.04)" }}
+                cursor={{ fill: "var(--foreground)", fillOpacity: 0.04 }}
                 content={
                   <ChartTooltipContent
                     hideIndicator
@@ -135,7 +136,7 @@ function TrendChart({ districts, from, to }: { districts: District[]; from: stri
       ) : (
         <ChartContainer config={config} className="mt-4 aspect-auto h-72 w-full sm:h-80">
           <LineChart data={data} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
-            <CartesianGrid vertical={false} stroke="#e8e8ed" />
+            <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
             <XAxis
               dataKey="month"
               tickLine={false}
