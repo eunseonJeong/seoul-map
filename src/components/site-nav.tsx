@@ -7,6 +7,7 @@ import { LogOutIcon } from "lucide-react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 const LINKS = [
   { href: "/", label: "지도" },
@@ -34,12 +35,7 @@ export function SiteNav({ nickname }: { nickname: string }) {
   return (
     <header className="sticky top-0 z-40 border-b border-foreground/5 bg-(--nav) backdrop-blur-xl backdrop-saturate-150">
       <nav className="mx-auto flex h-12 max-w-[1024px] items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
-          <span className="grid size-6 place-items-center rounded-[7px] bg-foreground text-[11px] font-bold text-background">
-            서
-          </span>
-          <span className="hidden sm:inline">서울 부동산</span>
-        </Link>
+        <Image src="/logo/modoobudongsan_logo_2_.svg" alt="모두 부동산" width={100} height={100} className="cursor-pointer" onClick={() => router.push("/")} />
         <ul className="flex items-center gap-5 text-[13px] sm:gap-8">
           {LINKS.map((l) => {
             const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href)
@@ -59,7 +55,7 @@ export function SiteNav({ nickname }: { nickname: string }) {
           })}
         </ul>
         <div className="flex items-center gap-1">
-          <span className="hidden max-w-24 truncate text-[13px] text-foreground/60 sm:inline">{nickname}</span>
+          {/* <span className="hidden max-w-24 truncate text-[13px] text-foreground/60 sm:inline">{nickname}</span> */}
           <ThemeToggle />
           <button
             onClick={() => setConfirmLogout(true)}
