@@ -3,11 +3,13 @@
 import Link from "next/link"
 import { useState } from "react"
 import {
+  ChevronLeftIcon,
   ChevronRightIcon,
   ConstructionIcon,
   GraduationCapIcon,
   NewspaperIcon,
   PencilIcon,
+  SearchIcon,
   ShoppingBagIcon,
   TrainFrontIcon,
   XIcon,
@@ -19,8 +21,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Change } from "@/components/change"
 import { Sparkline } from "@/components/price-chart"
+import { SubwayBadge } from "@/components/subway-badge"
 import { formatManwon, formatPopulation, monthLong } from "@/lib/format"
 import { formatMetric, metricValue, METRICS } from "@/lib/map-metrics"
+import { cn } from "@/lib/utils"
 import type { District, DistrictFeatures, DistrictHighlights, DistrictStat, MapMetric } from "@/lib/types"
 
 const FEATURE_GROUPS = [
@@ -211,16 +215,27 @@ function InfraStats({ stat, district }: { stat: DistrictStat | null; district: D
         {population && <span className="text-[12px] text-muted-foreground">{population}</span>}
       </div>
       <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-border/60">
-        <Stat label="지하철역" value={`${n(stat.subwayStations)}곳`} />
+        <Stat
+          label={stat.subwayStations != null ? `지하철 역` : "지하철"}
+          value={
+            stat.subwayLines.length > 0 ? (
+              // 노선이 많으면 줄을 바꿔 칸 안에 담는다
+              <span className="mt-1 flex flex-wrap gap-1">
+                {stat.subwayLines.map((line) => (
+                  <SubwayBadge key={line} line={line} />
+                ))}
+              </span>
+            ) : (
+              "—"
+            )
+          }
+        />
         <Stat label="초·중·고" value={`${n(stat.elementarySchools)}·${n(stat.middleSchools)}·${n(stat.highSchools)}`} />
-        <Stat label="입시·보습 학원" value={`${n(stat.examAcademies)}곳`} />
+        <Stat label="입시·보습 학원" value={`${n(stat.examAcademies)}`} />
       </dl>
-      {stat.subwayLines.length > 0 && (
-        <p className="mt-2 text-[12px] text-muted-foreground">노선: {stat.subwayLines.join(", ")}</p>
-      )}
-      <p className="mt-1 text-[12px] text-muted-foreground">
+      {/* <p className="mt-2 text-[12px] text-muted-foreground">
         학원 {n(stat.academies)} · 교습소 {n(stat.tutoringCenters)}
-      </p>
+      </p> */}
     </div>
   )
 }
@@ -234,7 +249,7 @@ function NewsList({ news }: { news: DistrictHighlights["news"] }) {
     <div>
       <div className="mb-2 flex items-baseline justify-between">
         <h4 className="flex items-center gap-1.5 text-[15px] font-semibold">
-          <NewspaperIcon className="size-4" /> 관련 기사
+          관련 기사
         </h4>
         <span className="text-[12px] text-muted-foreground">네이버 뉴스 · 최근 30일</span>
       </div>
@@ -361,7 +376,10 @@ function MemoBox({ initial, onSave }: { initial: string; onSave: (v: string) => 
   )
 }
 
-/** 구를 고르기 전: 현재 지표 기준 순위 */
+/** 모바일에서 한 번에 보여 줄 순위 줄 수 */
+const RANK_PAGE_SIZE = 5
+
+/** 구를 고르기 전: 현재 지표 기준 순위. 모바일에서는 검색과 페이지 넘김으로 높이를 줄인다 */
 export function DistrictRanking({
   districts,
   metric,
@@ -371,28 +389,105 @@ export function DistrictRanking({
   metric: MapMetric
   onSelect: (code: string) => void
 }) {
+  const [query, setQuery] = useState("")
+  const [page, setPage] = useState(0)
   const sorted = [...districts].sort((a, b) => metricValue(b, metric) - metricValue(a, metric))
+  // 순위는 검색과 상관없이 전체 기준으로 매긴다
+  const ranked = sorted.map((d, i) => ({ d, rank: i + 1 }))
+  const q = query.trim()
+  const filtered = q ? ranked.filter(({ d }) => d.name.includes(q) || d.nameEng.toLowerCase().includes(q.toLowerCase())) : ranked
+  const pages = Math.max(1, Math.ceil(filtered.length / RANK_PAGE_SIZE))
+  const current = Math.min(page, pages - 1)
+  const onPage = (i: number) => Math.floor(i / RANK_PAGE_SIZE) === current
   const label = METRICS.find((m) => m.id === metric)!.label
   return (
     <div>
       <p className="text-[12px] font-medium tracking-wide text-muted-foreground uppercase">Seoul</p>
       <h3 className="mt-1 text-[28px] font-semibold leading-tight">구를 선택하세요</h3>
       <p className="mt-2 text-[15px] text-muted-foreground">지도에서 구를 누르면 시세와 특징이 여기에 나옵니다.</p>
-      <h4 className="mt-6 mb-2 text-[15px] font-semibold">{label} 순위</h4>
-      <ol className="divide-y divide-border/60 overflow-hidden rounded-2xl bg-muted/60">
-        {sorted.map((d, i) => (
-          <li key={d.code}>
-            <button
-              onClick={() => onSelect(d.code)}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] transition hover:bg-black/[0.03]"
-            >
-              <span className="tabular w-5 text-[12px] text-muted-foreground">{i + 1}</span>
-              <span className="flex-1">{d.name}</span>
-              <span className="tabular font-medium">{formatMetric(metricValue(d, metric), metric)}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
+      <div className="mt-6 mb-2 flex items-center justify-between gap-3">
+        <h4 className="text-[15px] font-semibold">{label} 순위</h4>
+        <div className="relative w-40 lg:hidden">
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setPage(0)
+            }}
+            placeholder="구 이름 검색"
+            aria-label="구 이름 검색"
+            className="h-8 w-full rounded-full bg-muted/80 pr-3 pl-8 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+      </div>
+      {filtered.length === 0 ? (
+        <p className="rounded-2xl bg-muted/60 px-4 py-6 text-center text-[14px] text-muted-foreground">
+          &lsquo;{q}&rsquo;에 맞는 구가 없습니다.
+        </p>
+      ) : (
+        <ol className="divide-y divide-border/60 overflow-hidden rounded-2xl bg-muted/60">
+          {filtered.map(({ d, rank }, i) => (
+            // 데스크톱은 전체, 모바일은 지금 페이지만
+            <li key={d.code} className={cn(!onPage(i) && "max-lg:hidden")}>
+              <button
+                onClick={() => onSelect(d.code)}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] transition hover:bg-black/[0.03]"
+              >
+                <span className="tabular w-5 text-[12px] text-muted-foreground">{rank}</span>
+                <span className="flex-1">{d.name}</span>
+                <span className="tabular font-medium">{formatMetric(metricValue(d, metric), metric)}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      )}
+      {pages > 1 && (
+        <nav aria-label="순위 페이지" className="mt-3 flex items-center justify-center gap-1 lg:hidden">
+          <PageButton label="이전 페이지" disabled={current === 0} onClick={() => setPage(current - 1)}>
+            <ChevronLeftIcon className="size-4" />
+          </PageButton>
+          {Array.from({ length: pages }, (_, i) => (
+            <PageButton key={i} label={`${i + 1}페이지`} active={i === current} onClick={() => setPage(i)}>
+              {i + 1}
+            </PageButton>
+          ))}
+          <PageButton label="다음 페이지" disabled={current === pages - 1} onClick={() => setPage(current + 1)}>
+            <ChevronRightIcon className="size-4" />
+          </PageButton>
+        </nav>
+      )}
     </div>
+  )
+}
+
+function PageButton({
+  label,
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string
+  active?: boolean
+  disabled?: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "tabular grid size-8 place-items-center rounded-full text-[13px] transition disabled:pointer-events-none disabled:opacity-30",
+        active ? "bg-foreground font-medium text-background" : "text-foreground/70 hover:bg-black/[0.06]",
+      )}
+    >
+      {children}
+    </button>
   )
 }
