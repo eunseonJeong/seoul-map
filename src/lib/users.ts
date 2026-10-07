@@ -17,7 +17,7 @@ const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, keylen: number)
 
 export function checkNickname(nickname: string): string | null {
   if (nickname.length < 2 || nickname.length > 16) return "닉네임은 2~16자로 정하세요."
-  if (!/^[가-힣a-zA-Z0-9_]+$/.test(nickname)) return "닉네임은 한글·영문·숫자·밑줄(_)만 쓸 수 있습니다."
+  if (!/^[가-힣a-zA-Z0-9_]+$/.test(nickname)) return "닉네임은 한글·영문·숫자·언더바(_)만 쓸 수 있습니다."
   return null
 }
 

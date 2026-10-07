@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, safeNext } from "@/components/auth/auth-shell"
+import { PasswordInput } from "@/components/auth/password-input"
 
 type NicknameState = { status: "idle" | "checking" } | { status: "ok" } | { status: "error"; message: string }
 
@@ -26,11 +27,16 @@ export function SignupForm() {
     const ctrl = new AbortController()
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/auth/nickname?value=${encodeURIComponent(value)}`, { signal: ctrl.signal })
+        const res = await fetch(`/api/auth/nickname?value=${encodeURIComponent(value)}`, {
+          // 서버가 답하지 않으면 '확인 중'에 멈춰 있지 않도록 10초 뒤 포기한다
+          signal: AbortSignal.any([ctrl.signal, AbortSignal.timeout(10_000)]),
+        })
         const data = (await res.json()) as { available: boolean; error?: string }
         setNicknameState(data.available ? { status: "ok" } : { status: "error", message: data.error ?? "쓸 수 없는 닉네임입니다." })
       } catch {
-        // 입력이 바뀌어 취소된 요청
+        // 입력이 바뀌어 취소된 요청은 무시
+        if (ctrl.signal.aborted) return
+        setNicknameState({ status: "error", message: "닉네임을 확인하지 못했습니다. 잠시 후 다시 입력해 보세요." })
       }
     }, 300)
     return () => {
@@ -51,11 +57,20 @@ export function SignupForm() {
     if (!ready) return
     setPending(true)
     setError(null)
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nickname: nickname.trim(), password, inviteCode }),
-    })
+    let res: Response
+    try {
+      res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: nickname.trim(), password, inviteCode }),
+        signal: AbortSignal.timeout(15_000),
+      })
+    } catch {
+      // 서버가 꺼져 있거나 답하지 않으면 버튼이 '진행 중'에 멈추지 않게 풀어 준다
+      setError("서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.")
+      setPending(false)
+      return
+    }
     if (res.ok) {
       router.replace(safeNext(params.get("next")))
       router.refresh()
@@ -63,7 +78,7 @@ export function SignupForm() {
     }
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     setError(data.error ?? "다시 시도하세요.")
-    if (res.status === 409) setNicknameState({ status: "error", message: data.error ?? "이미 쓰고 있는 닉네임입니다." })
+    if (res.status === 409) setNicknameState({ status: "error", message: data.error ?? "이미 사용 중인 닉네임입니다." })
     setPending(false)
   }
 
@@ -73,11 +88,13 @@ export function SignupForm() {
         label="닉네임"
         hint={
           nicknameState.status === "ok" ? (
-            <span className="text-[#1f9a55]">쓸 수 있는 닉네임입니다.</span>
+            <span className="text-[#1f9a55]">사용 가능한 닉네임입니다.</span>
+          ) : nicknameState.status === "checking" ? (
+            <span className="text-muted-foreground">확인하는 중…</span>
           ) : nicknameState.status === "error" ? (
             <span className="text-destructive">{nicknameState.message}</span>
           ) : (
-            <span className="text-muted-foreground">한글·영문·숫자·밑줄, 2~16자</span>
+            <span className="text-muted-foreground">한글·영문·숫자·언더바(_), 2~16자</span>
           )
         }
       >
@@ -96,10 +113,10 @@ export function SignupForm() {
         label="비밀번호"
         hint={<span className={passwordError ? "text-destructive" : "text-muted-foreground"}>{passwordError ?? "영문과 숫자를 섞어 8자 이상"}</span>}
       >
-        <Input type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <PasswordInput autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       </Field>
       <Field label="비밀번호 확인" hint={confirmError && <span className="text-destructive">{confirmError}</span>}>
-        <Input type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <PasswordInput autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
       </Field>
       <Field label="초대 코드">
         <Input autoComplete="off" required value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} />
