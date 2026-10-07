@@ -83,7 +83,8 @@ export function WatchlistView({
             <EmptyState />
           ) : (
             <>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {/* 모바일에서도 네 장을 한눈에: 2×2 */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
                 <Tile label="체크한 단지" value={`${items.length}곳`} />
                 <Tile label="평균 변동" value={<Change value={avg} />} />
                 <Tile
@@ -98,7 +99,7 @@ export function WatchlistView({
                 />
               </div>
 
-              <div className="mt-10 flex flex-col items-center justify-between gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col items-center justify-between gap-3 sm:mt-10 sm:flex-row">
                 <Segmented
                   value={dealType}
                   onChange={setDealType}
@@ -119,23 +120,36 @@ export function WatchlistView({
                 />
               </div>
 
-              <ul className="mt-5 space-y-3">
+              <ul className="mt-5 space-y-2 sm:space-y-3">
                 {rows.map((r) => (
-                  <li key={r.w.id} className="rounded-[24px] bg-muted p-5 sm:p-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                      <div className="min-w-0 flex-1">
-                        <Link href={`/complex/${r.complex.id}`} className="group inline-flex items-center gap-1">
-                          <span className="text-[19px] font-semibold group-hover:underline">{r.complex.name}</span>
-                          <ChevronRightIcon className="size-4 text-muted-foreground" />
-                        </Link>
-                        <p className="mt-0.5 text-[13px] text-muted-foreground">
-                          {r.gu} {r.complex.dong} · {areaLabel(r.w.area)} · {r.w.baseDate} 체크
-                        </p>
+                  <li key={r.w.id} className="rounded-[20px] bg-muted px-4 py-3.5 sm:rounded-[24px] sm:p-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                      <div className="flex items-start gap-3 sm:min-w-0 sm:flex-1">
+                        <div className="min-w-0 flex-1">
+                          <Link href={`/complex/${r.complex.id}`} className="group flex items-center gap-1">
+                            <span className="truncate text-[17px] font-semibold group-hover:underline sm:text-[19px]">{r.complex.name}</span>
+                            <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+                          </Link>
+                          <p className="mt-0.5 truncate text-[12px] text-muted-foreground sm:text-[13px]">
+                            {r.gu} {r.complex.dong} · {areaLabel(r.w.area)} · {r.w.baseDate} 체크
+                          </p>
+                        </div>
+                        {/* 모바일: 변동률을 이름 옆에 */}
+                        <ChangePill value={r.change} className="shrink-0 sm:hidden" />
                       </div>
 
                       <MiniTrend values={r.snap?.trend ?? []} />
 
-                      <div className="tabular flex items-center gap-5 sm:w-[300px] sm:justify-end">
+                      {/* 모바일: 기준가 → 최근 실거래 한 줄 */}
+                      <p className="tabular text-[13px] sm:hidden">
+                        <span className="text-muted-foreground">기준 </span>
+                        {formatPrice(r.base)}
+                        <span className="mx-1.5 text-muted-foreground">→</span>
+                        <span className="text-muted-foreground">최근 </span>
+                        <span className="font-semibold">{formatPrice(r.current?.price)}</span>
+                      </p>
+
+                      <div className="tabular hidden items-center gap-5 sm:flex sm:w-[300px] sm:justify-end">
                         <div className="text-right">
                           <p className="text-[12px] text-muted-foreground">기준가</p>
                           <p className="text-[15px]">{formatPrice(r.base)}</p>
@@ -148,7 +162,7 @@ export function WatchlistView({
                       </div>
                     </div>
 
-                    <div className="mt-4 flex items-center gap-2 border-t border-black/5 pt-3">
+                    <div className="mt-2.5 flex items-center gap-2 border-t border-black/5 pt-2 sm:mt-4 sm:pt-3">
                       <MemoInput
                         initial={r.w.memo}
                         onSave={(v) => {
@@ -180,10 +194,10 @@ export function WatchlistView({
 
 function Tile({ label, value, sub }: { label: string; value: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <div className="rounded-[28px] bg-muted px-6 py-7">
-      <p className="text-[13px] font-medium text-muted-foreground">{label}</p>
-      <p className="tabular mt-2 truncate text-[24px] leading-tight font-semibold">{value}</p>
-      {sub && <p className="mt-1 text-[15px]">{sub}</p>}
+    <div className="min-w-0 rounded-[20px] bg-muted px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-7">
+      <p className="text-[12px] font-medium text-muted-foreground sm:text-[13px]">{label}</p>
+      <p className="tabular mt-1 truncate text-[18px] leading-tight font-semibold sm:mt-2 sm:text-[24px]">{value}</p>
+      {sub && <p className="mt-1 text-[13px] sm:text-[15px]">{sub}</p>}
     </div>
   )
 }
