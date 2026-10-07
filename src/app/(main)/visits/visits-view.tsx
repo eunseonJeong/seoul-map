@@ -2,8 +2,10 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { PlusIcon, StarIcon } from "lucide-react"
+import { PlusIcon, StarIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
+import { DatePicker } from "@/components/calendar"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Segmented } from "@/components/segmented"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -12,10 +14,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { areaLabel, formatPrice } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import type { Complex, VisitInput, VisitNote } from "@/lib/types"
+import { ComplexNameInput, type WatchOption } from "./complex-name-input"
 
 type Sort = "recent" | "rating" | "price"
 
-export function VisitsView({ initialVisits, complexes }: { initialVisits: VisitNote[]; complexes: Complex[] }) {
+export function VisitsView({
+  initialVisits,
+  complexes,
+  watchOptions,
+}: {
+  initialVisits: VisitNote[]
+  complexes: Complex[]
+  watchOptions: WatchOption[]
+}) {
   const [visits, setVisits] = useState(initialVisits)
   const [sort, setSort] = useState<Sort>("recent")
   const [editing, setEditing] = useState<VisitNote | "new" | null>(null)
@@ -51,7 +62,6 @@ export function VisitsView({ initialVisits, complexes }: { initialVisits: VisitN
         <div className="mx-auto max-w-[1024px]">
           <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
             <Segmented
-              size="sm"
               value={sort}
               onChange={setSort}
               options={[
@@ -115,7 +125,6 @@ export function VisitsView({ initialVisits, complexes }: { initialVisits: VisitN
               </table>
             </div>
           )}
-          <p className="mt-4 text-center text-[12px] text-muted-foreground">행을 누르면 전체 내용을 보고 고칠 수 있습니다.</p>
         </div>
       </section>
 
@@ -125,6 +134,7 @@ export function VisitsView({ initialVisits, complexes }: { initialVisits: VisitN
             key={editing === "new" ? "new" : editing.id}
             visit={editing === "new" ? null : editing}
             complexes={complexes}
+            watchOptions={watchOptions}
             onSaved={handleSaved}
             onDeleted={handleDeleted}
           />
@@ -179,11 +189,13 @@ function toForm(v: VisitNote | null): FormState {
 function VisitForm({
   visit,
   complexes,
+  watchOptions,
   onSaved,
   onDeleted,
 }: {
   visit: VisitNote | null
   complexes: Complex[]
+  watchOptions: WatchOption[]
   onSaved: (v: VisitNote) => void
   onDeleted: (id: string) => void
 }) {
@@ -192,14 +204,15 @@ function VisitForm({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }))
 
-  function pickComplex(id: string) {
-    const c = complexes.find((x) => x.id === id)
-    setForm((f) => ({
-      ...f,
-      complexId: c?.id ?? null,
-      complexName: c ? c.name : f.complexName,
-      location: c ? c.address.replace(/^서울\s*/, "") : f.location,
-    }))
+  // 관심 단지 이름과 똑같이 입력하면 그 단지와 연결한다
+  function typeComplexName(name: string) {
+    const c = complexes.find((x) => x.name === name.trim())
+    setForm((f) => ({ ...f, complexId: c?.id ?? null, complexName: name }))
+  }
+
+  // 목록에서 관심 단지를 고르면 단지명·위치·면적을 채운다
+  function pickWatch(o: WatchOption) {
+    setForm((f) => ({ ...f, complexId: o.complexId, complexName: o.name, location: o.location, area: String(o.area) }))
   }
 
   async function save(e: React.FormEvent) {
@@ -224,7 +237,6 @@ function VisitForm({
 
   async function remove() {
     if (!visit) return
-    if (!confirmDelete) return setConfirmDelete(true)
     setBusy(true)
     try {
       const res = await fetch(`/api/visits/${visit.id}`, { method: "DELETE" })
@@ -234,6 +246,7 @@ function VisitForm({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "삭제하지 못했습니다.")
       setBusy(false)
+      setConfirmDelete(false)
     }
   }
 
@@ -247,24 +260,21 @@ function VisitForm({
 
       <form id="visit-form" onSubmit={save} className="grid gap-4 sm:grid-cols-2">
         <Field label="임장일">
-          <Input type="date" required value={form.visitDate} onChange={(e) => set("visitDate", e.target.value)} />
+          <DatePicker label="임장일" value={form.visitDate} onChange={(v) => set("visitDate", v)} />
         </Field>
-        <Field label="관심 단지에서 고르기" hint={linked ? <Link href={`/complex/${linked.id}`} className="text-link hover:underline">단지 상세 보기</Link> : "관심 단지로 등록하면 여기서 고를 수 있습니다"}>
-          <select
-            value={form.complexId ?? ""}
-            onChange={(e) => pickComplex(e.target.value)}
-            className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <option value="">직접 입력</option>
-            {complexes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="단지명">
-          <Input required value={form.complexName} onChange={(e) => set("complexName", e.target.value)} />
+        <Field
+          label="단지명"
+          hint={
+            linked ? (
+              <Link href={`/complex/${linked.id}`} className="text-link hover:underline">
+                관심 단지 · 상세 보기
+              </Link>
+            ) : watchOptions.length ? (
+              "직접 입력하거나 관심 단지에서 선택"
+            ) : null
+          }
+        >
+          <ComplexNameInput value={form.complexName} options={watchOptions} onChange={typeComplexName} onPick={pickWatch} />
         </Field>
         <Field label="위치 (구·동)">
           <Input value={form.location} onChange={(e) => set("location", e.target.value)} placeholder="강남구 대치동" />
@@ -320,18 +330,39 @@ function VisitForm({
         </Field>
       </form>
 
-      <DialogFooter className="sm:justify-between">
-        {visit ? (
-          <Button type="button" variant="ghost" disabled={busy} onClick={remove} className="text-destructive hover:text-destructive">
-            {confirmDelete ? "한 번 더 누르면 삭제" : "삭제"}
+      <DialogFooter>
+        {visit && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            onClick={() => setConfirmDelete(true)}
+            className="border-destructive/30 text-destructive hover:bg-destructive/5 hover:text-destructive"
+          >
+            기록 삭제
           </Button>
-        ) : (
-          <span />
         )}
         <Button type="submit" form="visit-form" disabled={busy}>
           {busy ? "저장 중…" : "저장"}
         </Button>
       </DialogFooter>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="임장 기록을 삭제할까요?"
+        description={
+          <>
+            {visit?.complexName} 기록이 영구히 삭제되며
+            <br />
+            삭제한 뒤에는 복구할 수 없습니다.
+          </>
+        }
+        confirmLabel="삭제"
+        destructive
+        pending={busy}
+        onConfirm={remove}
+      />
     </DialogContent>
   )
 }

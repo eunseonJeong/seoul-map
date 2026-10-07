@@ -5,33 +5,38 @@ import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 import { Change } from "@/components/change"
 import { formatManwon } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import type { District } from "@/lib/types"
+import type { DistrictRow } from "./rows"
 
-type Key = "name" | "salePerPyeong" | "jeonsePerPyeong" | "jeonseRatio" | "change3m" | "change12m" | "weeklyChange"
+type Key = Exclude<keyof DistrictRow, "code">
 
-const COLUMNS: { key: Key; label: string; render: (d: District) => React.ReactNode }[] = [
-  { key: "salePerPyeong", label: "3.3㎡당 매매", render: (d) => formatManwon(d.salePerPyeong) },
-  { key: "jeonsePerPyeong", label: "3.3㎡당 전세", render: (d) => formatManwon(d.jeonsePerPyeong) },
-  { key: "jeonseRatio", label: "전세가율", render: (d) => `${d.jeonseRatio.toFixed(1)}%` },
+const COLUMNS: { key: Key; label: string; render: (d: DistrictRow) => React.ReactNode }[] = [
+  { key: "salePerPyeong", label: "3.3㎡당 매매", render: (d) => (d.salePerPyeong == null ? "—" : formatManwon(d.salePerPyeong)) },
+  { key: "jeonsePerPyeong", label: "3.3㎡당 전세", render: (d) => (d.jeonsePerPyeong == null ? "—" : formatManwon(d.jeonsePerPyeong)) },
+  { key: "jeonseRatio", label: "전세가율", render: (d) => (d.jeonseRatio == null ? "—" : `${d.jeonseRatio.toFixed(1)}%`) },
   { key: "weeklyChange", label: "주간 (R-ONE)", render: (d) => <Change value={d.weeklyChange} digits={2} /> },
   { key: "change3m", label: "3개월", render: (d) => <Change value={d.change3m} /> },
   { key: "change12m", label: "1년", render: (d) => <Change value={d.change12m} /> },
+  { key: "periodChange", label: "기간 변동", render: (d) => <Change value={d.periodChange} /> },
 ]
 
-export function DistrictTable({ districts }: { districts: District[] }) {
-  // 주간 변동(R-ONE)은 수집 전이면 칸을 숨긴다
-  const columns = COLUMNS.filter((c) => c.key !== "weeklyChange" || districts.some((d) => d.weeklyChange != null))
+export function DistrictTable({ rows: input, periodLabel }: { rows: DistrictRow[]; periodLabel: string }) {
+  // 값이 하나도 없는 칸(수집 전 주간 변동, 기간을 안 고른 기간 변동)은 숨긴다
+  const columns = COLUMNS.filter((c) => input.some((d) => d[c.key] != null)).map((c) =>
+    c.key === "periodChange" ? { ...c, label: periodLabel } : c,
+  )
   const [sortKey, setSortKey] = useState<Key>("salePerPyeong")
   const [desc, setDesc] = useState(true)
 
   const rows = useMemo(() => {
-    return [...districts].sort((a, b) => {
+    return [...input].sort((a, b) => {
       const av = a[sortKey]
       const bv = b[sortKey]
-      const c = typeof av === "string" ? av.localeCompare(bv as string, "ko") : ((av as number) ?? 0) - ((bv as number) ?? 0)
-      return desc ? -c : c
+      if (typeof av === "string") return (desc ? -1 : 1) * av.localeCompare(bv as string, "ko")
+      // 값이 없는 구는 정렬 방향과 상관없이 맨 아래
+      if (av == null || bv == null) return av == null ? (bv == null ? 0 : 1) : -1
+      return desc ? (bv as number) - av : av - (bv as number)
     })
-  }, [districts, sortKey, desc])
+  }, [input, sortKey, desc])
 
   function toggle(key: Key) {
     if (key === sortKey) setDesc((d) => !d)

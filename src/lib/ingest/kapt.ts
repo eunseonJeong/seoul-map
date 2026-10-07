@@ -2,7 +2,7 @@
 // 실거래 단지(complex)와는 구·동·지번으로 잇고, 지번이 안 맞으면 같은 동에서 단지명으로 한 번 더 찾는다.
 // K-apt 는 의무관리 단지(대체로 150세대 이상) 위주라 작은 단지는 매칭되지 않을 수 있다.
 
-import { eq } from "drizzle-orm"
+import { sql } from "drizzle-orm"
 import { complex, district } from "@/db/schema"
 import type { Database } from "./store"
 
@@ -126,14 +126,28 @@ export async function updateComplexHouseholds(
   for (const gu of gus) {
     const list = lists.get(gu.code)
     if (!list) continue
-    let basisFailed = 0
-    const basics = await pool(list, 2, async (item) => {
+    // 기본정보: 한 바퀴 돌고, 실패한 단지만 잠시 쉬었다가 한 번 더 천천히
+    const failedCodes: string[] = []
+    const fetched = await pool(list, 2, async (item) => {
       await new Promise((r) => setTimeout(r, 200)) // 요청 간격
       return fetchBasis(item.kaptCode).catch(() => {
-        basisFailed++
+        failedCodes.push(item.kaptCode)
         return null
       })
     })
+    let basisFailed = 0
+    if (failedCodes.length) {
+      await new Promise((r) => setTimeout(r, 30_000))
+      const retried = await pool(failedCodes, 1, async (code) => {
+        await new Promise((r) => setTimeout(r, 500))
+        return fetchBasis(code).catch(() => {
+          basisFailed++
+          return null
+        })
+      })
+      fetched.push(...retried)
+    }
+    const basics = fetched
 
     const updates = new Map<string, { households: number | null; kaptCode: string; roadAddress: string | null }>()
     let matched = 0
@@ -153,9 +167,18 @@ export async function updateComplexHouseholds(
         updates.set(id, { households, kaptCode: b.kaptCode, roadAddress: b.doroJuso?.trim() || null })
       }
     }
-    await db.transaction(async (tx) => {
-      for (const [id, u] of updates) await tx.update(complex).set(u).where(eq(complex.id, id))
-    })
+    // 구별로 UPDATE 한 번 (단지마다 보내면 트랜잭션이 길어진다)
+    if (updates.size) {
+      const values = sql.join(
+        [...updates].map(([id, u]) => sql`(${id}, ${u.households}::int, ${u.kaptCode}, ${u.roadAddress})`),
+        sql`, `,
+      )
+      await db.execute(sql`
+        update complex c
+        set households = v.households, kapt_code = v.kapt_code, road_address = v.road_address
+        from (values ${values}) as v(id, households, kapt_code, road_address)
+        where c.id = v.id`)
+    }
 
     result.kaptTotal += list.length
     result.basisFailed += basisFailed
