@@ -1,0 +1,233 @@
+"use client"
+
+import Link from "next/link"
+import { useMemo, useState } from "react"
+import { ChevronRightIcon, Trash2Icon } from "lucide-react"
+import { toast } from "sonner"
+import { Change, ChangePill } from "@/components/change"
+import { Segmented } from "@/components/segmented"
+import { areaLabel, changePct, formatPrice } from "@/lib/format"
+import { useWatchlist } from "@/lib/local-store"
+import { cn } from "@/lib/utils"
+import type { Complex, DealType, District, WatchItem } from "@/lib/types"
+
+export type PriceSnapshot = {
+  sale: { price: number; month: string } | null
+  jeonse: { price: number; month: string } | null
+  trend: (number | null)[]
+}
+
+type Sort = "up" | "down" | "recent"
+
+export function WatchlistView({
+  complexes,
+  districts,
+  prices,
+}: {
+  complexes: Complex[]
+  districts: District[]
+  prices: Record<string, PriceSnapshot>
+}) {
+  const { items, add, remove, updateMemo } = useWatchlist()
+  const [dealType, setDealType] = useState<DealType>("sale")
+  const [sort, setSort] = useState<Sort>("up")
+
+  const rows = useMemo(() => {
+    const complexById = new Map(complexes.map((c) => [c.id, c]))
+    const guByCode = new Map(districts.map((d) => [d.code, d.name]))
+    const list = items.flatMap((w) => {
+      const complex = complexById.get(w.complexId)
+      if (!complex) return []
+      const snap = prices[`${w.complexId}-${w.area}`]
+      const current = dealType === "sale" ? snap?.sale : snap?.jeonse
+      const base = dealType === "sale" ? w.baseSalePrice : w.baseJeonsePrice
+      return [{ w, complex, gu: guByCode.get(complex.districtCode) ?? "", snap, current, base, change: changePct(current?.price, base) }]
+    })
+    return list.sort((a, b) => {
+      if (sort === "recent") return b.w.createdAt.localeCompare(a.w.createdAt)
+      const av = a.change ?? -Infinity
+      const bv = b.change ?? -Infinity
+      return sort === "up" ? bv - av : av - bv
+    })
+  }, [items, complexes, districts, prices, dealType, sort])
+
+  const changes = rows.map((r) => r.change).filter((v): v is number => v != null)
+  const avg = changes.length ? changes.reduce((s, v) => s + v, 0) / changes.length : null
+  const best = rows.filter((r) => r.change != null).reduce<(typeof rows)[number] | null>((m, r) => (!m || r.change! > m.change! ? r : m), null)
+  const worst = rows.filter((r) => r.change != null).reduce<(typeof rows)[number] | null>((m, r) => (!m || r.change! < m.change! ? r : m), null)
+
+  function handleRemove(w: WatchItem, name: string) {
+    remove(w.id)
+    toast(`${name} ${w.area}㎡를 뺐습니다.`, {
+      action: { label: "되돌리기", onClick: () => add(w) },
+    })
+  }
+
+  return (
+    <>
+      <section className="px-4 pt-14 pb-10 text-center sm:pt-20">
+        <h1 className="text-[40px] leading-[1.08] font-semibold sm:text-[56px]">관심 단지.</h1>
+        <p className="mx-auto mt-4 max-w-xl text-[19px] text-muted-foreground sm:text-[21px]">
+          체크한 날의 실거래가와 비교해 얼마나 올랐는지 봅니다.
+        </p>
+      </section>
+
+      <section className="px-4 pb-16 sm:px-6">
+        <div className="mx-auto max-w-[1024px]">
+          {items.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <>
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <Tile label="체크한 단지" value={`${items.length}곳`} />
+                <Tile label="평균 변동" value={<Change value={avg} />} />
+                <Tile
+                  label="가장 많이 오른"
+                  value={best ? best.complex.name : "—"}
+                  sub={best ? <Change value={best.change} /> : null}
+                />
+                <Tile
+                  label={worst && worst.change! < 0 ? "가장 많이 내린" : "가장 적게 오른"}
+                  value={worst && worst !== best ? worst.complex.name : "—"}
+                  sub={worst && worst !== best ? <Change value={worst.change} /> : null}
+                />
+              </div>
+
+              <div className="mt-10 flex flex-col items-center justify-between gap-3 sm:flex-row">
+                <Segmented
+                  value={dealType}
+                  onChange={setDealType}
+                  options={[
+                    { value: "sale", label: "매매" },
+                    { value: "jeonse", label: "전세" },
+                  ]}
+                />
+                <Segmented
+                  size="sm"
+                  value={sort}
+                  onChange={setSort}
+                  options={[
+                    { value: "up", label: "상승순" },
+                    { value: "down", label: "하락순" },
+                    { value: "recent", label: "최근 체크" },
+                  ]}
+                />
+              </div>
+
+              <ul className="mt-5 space-y-3">
+                {rows.map((r) => (
+                  <li key={r.w.id} className="rounded-[24px] bg-muted p-5 sm:p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/complex/${r.complex.id}`} className="group inline-flex items-center gap-1">
+                          <span className="text-[19px] font-semibold group-hover:underline">{r.complex.name}</span>
+                          <ChevronRightIcon className="size-4 text-muted-foreground" />
+                        </Link>
+                        <p className="mt-0.5 text-[13px] text-muted-foreground">
+                          {r.gu} {r.complex.dong} · {areaLabel(r.w.area)} · {r.w.baseDate} 체크
+                        </p>
+                      </div>
+
+                      <MiniTrend values={r.snap?.trend ?? []} />
+
+                      <div className="tabular flex items-center gap-5 sm:w-[300px] sm:justify-end">
+                        <div className="text-right">
+                          <p className="text-[12px] text-muted-foreground">기준가</p>
+                          <p className="text-[15px]">{formatPrice(r.base)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[12px] text-muted-foreground">최근 실거래</p>
+                          <p className="text-[15px] font-semibold">{formatPrice(r.current?.price)}</p>
+                        </div>
+                        <ChangePill value={r.change} className="min-w-[84px] justify-center" />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-2 border-t border-black/5 pt-3">
+                      <MemoInput
+                        initial={r.w.memo}
+                        onSave={(v) => {
+                          updateMemo(r.w.id, v)
+                          toast.success("메모를 저장했습니다.")
+                        }}
+                      />
+                      <button
+                        onClick={() => handleRemove(r.w, r.complex.name)}
+                        aria-label="관심 단지에서 빼기"
+                        className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-black/5 hover:text-destructive"
+                      >
+                        <Trash2Icon className="size-4" />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 text-center text-[12px] text-muted-foreground">
+                변동률 = (최근 실거래 중위가 − 기준가) ÷ 기준가. 거래가 적은 단지는 1~2건에 크게 흔들릴 수 있습니다.
+              </p>
+            </>
+          )}
+        </div>
+      </section>
+    </>
+  )
+}
+
+function Tile({ label, value, sub }: { label: string; value: React.ReactNode; sub?: React.ReactNode }) {
+  return (
+    <div className="rounded-[28px] bg-muted px-6 py-7">
+      <p className="text-[13px] font-medium text-muted-foreground">{label}</p>
+      <p className="tabular mt-2 truncate text-[24px] leading-tight font-semibold">{value}</p>
+      {sub && <p className="mt-1 text-[15px]">{sub}</p>}
+    </div>
+  )
+}
+
+function MiniTrend({ values }: { values: (number | null)[] }) {
+  const pts = values.map((v, i) => [i, v] as const).filter((p): p is readonly [number, number] => p[1] != null)
+  if (pts.length < 2) return <div className="hidden w-24 sm:block" />
+  const ys = pts.map((p) => p[1])
+  const min = Math.min(...ys)
+  const max = Math.max(...ys)
+  const W = 96
+  const H = 32
+  const d = pts
+    .map(([i, v], k) => `${k ? "L" : "M"}${(i / (values.length - 1)) * W} ${H - ((v - min) / (max - min || 1)) * (H - 4) - 2}`)
+    .join(" ")
+  const up = pts.at(-1)![1] >= pts[0][1]
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="hidden h-8 w-24 sm:block" aria-label="최근 12개월 매매 추이">
+      <path d={d} fill="none" stroke={up ? "var(--up)" : "var(--down)"} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function MemoInput({ initial, onSave }: { initial: string; onSave: (v: string) => void }) {
+  const [value, setValue] = useState(initial)
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={() => value !== initial && onSave(value)}
+      onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+      placeholder="메모 추가"
+      aria-label="메모"
+      className={cn(
+        "h-8 flex-1 rounded-lg bg-transparent px-2 text-[14px] outline-none placeholder:text-muted-foreground",
+        "hover:bg-black/[0.03] focus:bg-white focus:ring-2 focus:ring-primary/20",
+      )}
+    />
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="rounded-[28px] bg-muted px-6 py-16 text-center">
+      <p className="text-[24px] font-semibold">아직 체크한 단지가 없습니다.</p>
+      <p className="mt-2 text-[17px] text-muted-foreground">지도에서 단지를 찾아 ‘관심 등록’을 누르세요.</p>
+      <Link href="/" className="mt-6 inline-flex items-center text-[17px] text-link hover:underline">
+        지도로 가기 <ChevronRightIcon className="size-4" />
+      </Link>
+    </div>
+  )
+}
