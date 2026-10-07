@@ -136,6 +136,7 @@ function ComplexDots({
   return (
     <g>
       {complexes.map((c) => {
+        if (c.lat == null || c.lng == null) return null // 좌표 없는 단지
         const raw = project([c.lng, c.lat])
         if (!raw) return null
         const pt = raw.map((n) => Math.round(n * 10) / 10)

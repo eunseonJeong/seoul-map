@@ -1,24 +1,27 @@
-import { getAreaMonthly, getComplexes, getDistricts } from "@/lib/api"
+import { getAreaMonthly, getComplexesByIds, getDistricts, listWatchlist } from "@/lib/api"
 import { latestPrice } from "@/lib/price"
+import { requireUser } from "@/lib/users"
 import { WatchlistView, type PriceSnapshot } from "./watchlist-view"
 
 export const metadata = { title: "관심 단지 · 서울 부동산" }
 
 export default async function WatchlistPage() {
-  const [complexes, districts] = await Promise.all([getComplexes(), getDistricts()])
+  const user = await requireUser()
+  const [items, districts] = await Promise.all([listWatchlist(user.id), getDistricts(user.id)])
+  const complexes = await getComplexesByIds([...new Set(items.map((w) => w.complexId))])
 
-  // TODO(백엔드 연결): watchlist 테이블을 서버에서 읽고, 체크한 단지의 최신가만 조회
+  // 체크한 단지·면적의 최신 실거래 중위가
   const prices: Record<string, PriceSnapshot> = {}
-  for (const c of complexes) {
-    for (const area of c.areas) {
-      const monthly = await getAreaMonthly(c.id, area)
-      prices[`${c.id}-${area}`] = {
+  await Promise.all(
+    items.map(async (w) => {
+      const monthly = await getAreaMonthly(w.complexId, w.area)
+      prices[`${w.complexId}-${w.area}`] = {
         sale: latestPrice(monthly, "sale"),
         jeonse: latestPrice(monthly, "jeonse"),
         trend: monthly.slice(-12).map((m) => m.sale),
       }
-    }
-  }
+    }),
+  )
 
-  return <WatchlistView complexes={complexes} districts={districts} prices={prices} />
+  return <WatchlistView initialItems={items} complexes={complexes} districts={districts} prices={prices} />
 }

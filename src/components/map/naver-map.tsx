@@ -77,7 +77,8 @@ export function NaverMap({ clientId, districts, metric, domain, selected, onSele
     if (!m) return
     const { maps } = window.naver
     markers.current.forEach((mk) => mk.setMap(null))
-    markers.current = complexes.map((c) => {
+    markers.current = complexes.flatMap((c) => {
+      if (c.lat == null || c.lng == null) return [] // 좌표 없는 단지
       const watched = watchedIds.has(c.id)
       const size = watched ? 12 : 9
       const mk = new maps.Marker({
@@ -90,7 +91,7 @@ export function NaverMap({ clientId, districts, metric, domain, selected, onSele
         },
       })
       maps.Event.addListener(mk, "click", () => router.push(`/complex/${c.id}`))
-      return mk
+      return [mk]
     })
   }, [ready, complexes, watchedIds, router])
 

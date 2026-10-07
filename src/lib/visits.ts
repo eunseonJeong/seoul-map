@@ -1,44 +1,47 @@
-// 임장 노트 저장 계층. API 라우트(src/app/api/visits)와 서버 컴포넌트만 부른다.
-// 지금은 서버 메모리에 둔 예시 데이터라 서버를 재시작하면 처음 상태로 돌아간다.
-// TODO(백엔드 연결): 각 함수 본문을 visit_note 테이블 쿼리로 바꾸면 된다. 시그니처는 그대로 둔다.
+// 임장 노트 저장 계층 (visit_note 테이블). API 라우트(src/app/api/visits)와 서버 컴포넌트만 부른다.
+import "server-only"
 
-import { seedVisits } from "./mock-data"
+import { and, desc, eq } from "drizzle-orm"
+import { db } from "@/db"
+import { visitNote } from "@/db/schema"
 import type { VisitInput, VisitNote } from "./types"
 
-// 개발 서버 핫 리로드 때 데이터가 날아가지 않도록 globalThis 에 둔다
-const store = globalThis as unknown as { __visits?: VisitNote[] }
-function table() {
-  return (store.__visits ??= seedVisits())
+type VisitRow = typeof visitNote.$inferSelect
+const toVisit = (row: VisitRow): VisitNote => {
+  const { userId, ...r } = row
+  void userId // 화면에는 보내지 않는다
+  return { ...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() }
 }
 
-const byRecent = (a: VisitNote, b: VisitNote) =>
-  b.visitDate.localeCompare(a.visitDate) || b.createdAt.localeCompare(a.createdAt)
-
-export async function listVisits(): Promise<VisitNote[]> {
-  return [...table()].sort(byRecent)
+export async function listVisits(userId: string): Promise<VisitNote[]> {
+  const rows = await db
+    .select()
+    .from(visitNote)
+    .where(eq(visitNote.userId, userId))
+    .orderBy(desc(visitNote.visitDate), desc(visitNote.createdAt))
+  return rows.map(toVisit)
 }
 
-export async function createVisit(input: VisitInput): Promise<VisitNote> {
-  const now = new Date().toISOString()
-  const visit: VisitNote = { ...input, id: crypto.randomUUID(), createdAt: now, updatedAt: now }
-  table().push(visit)
-  return visit
+export async function createVisit(userId: string, input: VisitInput): Promise<VisitNote> {
+  const [row] = await db.insert(visitNote).values({ ...input, userId }).returning()
+  return toVisit(row)
 }
 
-export async function updateVisit(id: string, input: VisitInput): Promise<VisitNote | null> {
-  const rows = table()
-  const i = rows.findIndex((v) => v.id === id)
-  if (i < 0) return null
-  rows[i] = { ...rows[i], ...input, updatedAt: new Date().toISOString() }
-  return rows[i]
+export async function updateVisit(userId: string, id: string, input: VisitInput): Promise<VisitNote | null> {
+  const [row] = await db
+    .update(visitNote)
+    .set(input)
+    .where(and(eq(visitNote.id, id), eq(visitNote.userId, userId)))
+    .returning()
+  return row ? toVisit(row) : null
 }
 
-export async function deleteVisit(id: string): Promise<boolean> {
-  const rows = table()
-  const i = rows.findIndex((v) => v.id === id)
-  if (i < 0) return false
-  rows.splice(i, 1)
-  return true
+export async function deleteVisit(userId: string, id: string): Promise<boolean> {
+  const rows = await db
+    .delete(visitNote)
+    .where(and(eq(visitNote.id, id), eq(visitNote.userId, userId)))
+    .returning({ id: visitNote.id })
+  return rows.length > 0
 }
 
 // ---------- 입력 검증 (DB 연결 후에도 그대로 쓴다) ----------

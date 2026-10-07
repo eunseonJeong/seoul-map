@@ -13,12 +13,14 @@ const COLUMNS: { key: Key; label: string; render: (d: District) => React.ReactNo
   { key: "salePerPyeong", label: "3.3㎡당 매매", render: (d) => formatManwon(d.salePerPyeong) },
   { key: "jeonsePerPyeong", label: "3.3㎡당 전세", render: (d) => formatManwon(d.jeonsePerPyeong) },
   { key: "jeonseRatio", label: "전세가율", render: (d) => `${d.jeonseRatio.toFixed(1)}%` },
-  { key: "weeklyChange", label: "주간", render: (d) => <Change value={d.weeklyChange} digits={2} /> },
+  { key: "weeklyChange", label: "주간 (R-ONE)", render: (d) => <Change value={d.weeklyChange} digits={2} /> },
   { key: "change3m", label: "3개월", render: (d) => <Change value={d.change3m} /> },
   { key: "change12m", label: "1년", render: (d) => <Change value={d.change12m} /> },
 ]
 
 export function DistrictTable({ districts }: { districts: District[] }) {
+  // 주간 변동(R-ONE)은 수집 전이면 칸을 숨긴다
+  const columns = COLUMNS.filter((c) => c.key !== "weeklyChange" || districts.some((d) => d.weeklyChange != null))
   const [sortKey, setSortKey] = useState<Key>("salePerPyeong")
   const [desc, setDesc] = useState(true)
 
@@ -26,7 +28,7 @@ export function DistrictTable({ districts }: { districts: District[] }) {
     return [...districts].sort((a, b) => {
       const av = a[sortKey]
       const bv = b[sortKey]
-      const c = typeof av === "string" ? av.localeCompare(bv as string, "ko") : (av as number) - (bv as number)
+      const c = typeof av === "string" ? av.localeCompare(bv as string, "ko") : ((av as number) ?? 0) - ((bv as number) ?? 0)
       return desc ? -c : c
     })
   }, [districts, sortKey, desc])
@@ -49,7 +51,7 @@ export function DistrictTable({ districts }: { districts: District[] }) {
                 구
               </SortButton>
             </th>
-            {COLUMNS.map((c) => (
+            {columns.map((c) => (
               <th key={c.key} className="px-3 py-3 text-right font-normal">
                 <SortButton active={sortKey === c.key} desc={desc} onClick={() => toggle(c.key)} alignRight>
                   {c.label}
@@ -65,7 +67,7 @@ export function DistrictTable({ districts }: { districts: District[] }) {
                 <span className="mr-3 inline-block w-5 text-[12px] text-muted-foreground">{i + 1}</span>
                 <span className="font-medium">{d.name}</span>
               </td>
-              {COLUMNS.map((c) => (
+              {columns.map((c) => (
                 <td key={c.key} className={cn("px-3 py-3 text-right", c.key === sortKey && "font-semibold")}>
                   {c.render(d)}
                 </td>

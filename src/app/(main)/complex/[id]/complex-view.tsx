@@ -20,7 +20,7 @@ import { PriceHistoryChart } from "@/components/price-chart"
 import { Segmented } from "@/components/segmented"
 import { latestPrice } from "@/lib/price"
 import { areaLabel, changePct, formatPrice, monthLong, toPyeong } from "@/lib/format"
-import { useWatchlist } from "@/lib/local-store"
+import { useWatchlist } from "@/lib/watchlist-store"
 import { cn } from "@/lib/utils"
 import type { AreaMonthly, Complex, DealType, Trade } from "@/lib/types"
 
@@ -81,7 +81,13 @@ export function ComplexView({
 
       <section className="px-4 pt-12 pb-10 text-center sm:px-6">
         <p className="text-[14px] text-muted-foreground">
-          {districtName} {complex.dong} · {complex.builtYear}년 준공 · {complex.households.toLocaleString()}세대
+          {[
+            `${districtName} ${complex.dong}`,
+            complex.builtYear && `${complex.builtYear}년 준공`,
+            complex.households && `${complex.households.toLocaleString()}세대`,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
         <h1 className="mt-2 text-[40px] leading-tight font-semibold sm:text-[48px]">{complex.name}</h1>
         <div className="mt-6 flex justify-center">
@@ -166,6 +172,7 @@ export function ComplexView({
                     <td className="py-2.5">
                       {t.contractDate}
                       {t.isCancelled && <span className="ml-2 text-[11px] no-underline">해제</span>}
+                      {t.isRenewal && <span className="ml-2 text-[11px] text-muted-foreground">갱신</span>}
                     </td>
                     <td className="py-2.5">{t.floor}층</td>
                     <td className="py-2.5 text-right font-medium">{formatPrice(t.price)}</td>
@@ -182,7 +189,7 @@ export function ComplexView({
             </table>
           </div>
           <p className="mt-3 text-[12px] text-muted-foreground">
-            신고 기한(30일) 때문에 최근 1~2개월은 거래가 더 늘어날 수 있습니다.
+            신고 기한(30일) 때문에 최근 1~2개월은 거래가 더 늘어날 수 있습니다. 갱신 계약은 추이(중위가)에서 뺍니다.
           </p>
         </div>
       </section>

@@ -1,16 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { AUTH_COOKIE, verifyToken } from "@/lib/auth"
 
-// 비밀번호를 통과하지 않은 요청은 페이지든 API든 /unlock 으로 돌려보낸다
+// 로그인하지 않은 요청은 페이지면 /login 으로, API 면 401 로 돌려보낸다
 export async function proxy(request: NextRequest) {
-  const ok = await verifyToken(request.cookies.get(AUTH_COOKIE)?.value)
-  if (ok) return NextResponse.next()
+  if (await verifyToken(request.cookies.get(AUTH_COOKIE)?.value)) return NextResponse.next()
 
   if (request.nextUrl.pathname.startsWith("/api/")) {
-    return NextResponse.json({ error: "locked" }, { status: 401 })
+    return NextResponse.json({ error: "login required" }, { status: 401 })
   }
   const url = request.nextUrl.clone()
-  url.pathname = "/unlock"
+  url.pathname = "/login"
   url.search = ""
   const next = request.nextUrl.pathname + request.nextUrl.search
   if (next !== "/") url.searchParams.set("next", next)
@@ -18,5 +17,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!unlock|api/unlock|_next/static|_next/image|favicon.ico).*)"],
+  // 로그인·가입 화면과 인증 API, cron(자체 비밀값으로 확인)은 통과시킨다
+  matcher: ["/((?!login|signup|api/auth|api/cron|_next/static|_next/image|favicon.ico).*)"],
 }

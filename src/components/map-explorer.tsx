@@ -5,14 +5,29 @@ import { SeoulMap } from "@/components/map/seoul-map"
 import { DistrictPanel, DistrictRanking } from "@/components/district-panel"
 import { ComplexSearch } from "@/components/complex-search"
 import { Segmented } from "@/components/segmented"
-import { useWatchlist } from "@/lib/local-store"
+import { useWatchlist } from "@/lib/watchlist-store"
 import { legendStops, metricDomain, METRICS } from "@/lib/map-metrics"
-import type { Complex, District, MapMetric } from "@/lib/types"
+import type { Complex, District, DistrictFeatures, DistrictHighlights, MapMetric, WatchItem } from "@/lib/types"
 
-export function MapExplorer({ districts, complexes }: { districts: District[]; complexes: Complex[] }) {
+export function MapExplorer({
+  districts: initialDistricts,
+  highlights,
+  memos: initialMemos,
+  markers,
+  initialWatch,
+}: {
+  districts: District[]
+  highlights: Record<string, DistrictHighlights>
+  memos: Record<string, string>
+  markers: Complex[] // 지도에 찍을 단지 (좌표가 있는 관심 단지)
+  initialWatch: WatchItem[]
+}) {
   const [metric, setMetric] = useState<MapMetric>("price")
   const [selected, setSelected] = useState<string | null>(null)
-  const { items } = useWatchlist()
+  // 패널에서 고친 소개·특징·메모를 새로고침 없이 반영한다
+  const [districts, setDistricts] = useState(initialDistricts)
+  const [memos, setMemos] = useState(initialMemos)
+  const { items } = useWatchlist(initialWatch)
   const panelRef = useRef<HTMLElement>(null)
 
   function select(code: string | null) {
@@ -36,7 +51,7 @@ export function MapExplorer({ districts, complexes }: { districts: District[]; c
           onChange={setMetric}
           options={METRICS.map((m) => ({ value: m.id, label: m.short }))}
         />
-        <ComplexSearch complexes={complexes} districts={districts} />
+        <ComplexSearch />
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.35fr_1fr]">
@@ -47,7 +62,7 @@ export function MapExplorer({ districts, complexes }: { districts: District[]; c
             domain={domain}
             selected={selected}
             onSelect={select}
-            complexes={complexes}
+            complexes={markers}
             watchedIds={watchedIds}
           />
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[12px] text-muted-foreground">
@@ -62,10 +77,6 @@ export function MapExplorer({ districts, complexes }: { districts: District[]; c
             </div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-full border border-foreground bg-white" />
-                단지
-              </span>
-              <span className="flex items-center gap-1.5">
                 <span className="size-2.5 rounded-full border border-foreground bg-[#ff9500]" />
                 관심 단지
               </span>
@@ -79,7 +90,12 @@ export function MapExplorer({ districts, complexes }: { districts: District[]; c
           {district ? (
             <DistrictPanel
               district={district}
-              complexes={complexes.filter((c) => c.districtCode === district.code)}
+              highlights={highlights[district.code] ?? { complexes: [], news: [], stat: null }}
+              memo={memos[district.code] ?? ""}
+              onMemoSaved={(memo) => setMemos((m) => ({ ...m, [district.code]: memo }))}
+              onProfileSaved={(profile: { summary: string; features: DistrictFeatures }) =>
+                setDistricts((list) => list.map((d) => (d.code === district.code ? { ...d, ...profile } : d)))
+              }
               onClose={() => setSelected(null)}
             />
           ) : (

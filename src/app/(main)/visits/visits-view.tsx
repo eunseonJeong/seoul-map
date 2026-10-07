@@ -249,7 +249,7 @@ function VisitForm({
         <Field label="임장일">
           <Input type="date" required value={form.visitDate} onChange={(e) => set("visitDate", e.target.value)} />
         </Field>
-        <Field label="등록된 단지에서 고르기" hint={linked ? <Link href={`/complex/${linked.id}`} className="text-link hover:underline">단지 상세 보기</Link> : "목록에 없으면 비워 두세요"}>
+        <Field label="관심 단지에서 고르기" hint={linked ? <Link href={`/complex/${linked.id}`} className="text-link hover:underline">단지 상세 보기</Link> : "관심 단지로 등록하면 여기서 고를 수 있습니다"}>
           <select
             value={form.complexId ?? ""}
             onChange={(e) => pickComplex(e.target.value)}

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LockIcon } from "lucide-react"
+import { LogOutIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const LINKS = [
@@ -12,13 +12,14 @@ const LINKS = [
   { href: "/districts", label: "구별 시세" },
 ]
 
-export function SiteNav() {
+export function SiteNav({ nickname }: { nickname: string }) {
   const pathname = usePathname()
   const router = useRouter()
 
-  async function lock() {
-    await fetch("/api/unlock", { method: "DELETE" })
-    router.replace("/unlock")
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" })
+    router.replace("/login")
+    router.refresh()
   }
 
   return (
@@ -48,14 +49,17 @@ export function SiteNav() {
             )
           })}
         </ul>
-        <button
-          onClick={lock}
-          aria-label="잠그기"
-          title="잠그기"
-          className="grid size-8 place-items-center rounded-full text-foreground/60 transition-colors hover:bg-black/5 hover:text-foreground"
-        >
-          <LockIcon className="size-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <span className="hidden max-w-24 truncate text-[13px] text-foreground/60 sm:inline">{nickname}</span>
+          <button
+            onClick={logout}
+            aria-label="로그아웃"
+            title="로그아웃"
+            className="grid size-8 place-items-center rounded-full text-foreground/60 transition-colors hover:bg-black/5 hover:text-foreground"
+          >
+            <LogOutIcon className="size-4" />
+          </button>
+        </div>
       </nav>
     </header>
   )

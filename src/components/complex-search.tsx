@@ -1,29 +1,44 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { SearchIcon } from "lucide-react"
-import type { Complex, District } from "@/lib/types"
 
-export function ComplexSearch({ complexes, districts }: { complexes: Complex[]; districts: District[] }) {
+type Result = { id: string; name: string; dong: string; guName: string }
+
+// 단지가 9천 개가 넘어서 서버(/api/complexes)에서 검색한다
+export function ComplexSearch() {
   const [q, setQ] = useState("")
   const [open, setOpen] = useState(false)
-  const guName = useMemo(() => new Map(districts.map((d) => [d.code, d.name])), [districts])
+  const [results, setResults] = useState<Result[] | null>(null)
 
-  const results = useMemo(() => {
+  useEffect(() => {
     const s = q.trim()
-    if (!s) return []
-    return complexes
-      .filter((c) => c.name.includes(s) || c.dong.includes(s) || guName.get(c.districtCode)?.includes(s))
-      .slice(0, 8)
-  }, [q, complexes, guName])
+    if (!s) return
+    const ctrl = new AbortController()
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/complexes?q=${encodeURIComponent(s)}`, { signal: ctrl.signal })
+        if (res.ok) setResults(await res.json())
+      } catch {
+        // 입력이 바뀌어 취소된 요청
+      }
+    }, 200)
+    return () => {
+      clearTimeout(timer)
+      ctrl.abort()
+    }
+  }, [q])
 
   return (
     <div className="relative w-full sm:w-72">
       <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <input
         value={q}
-        onChange={(e) => setQ(e.target.value)}
+        onChange={(e) => {
+          setQ(e.target.value)
+          setResults(null)
+        }}
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="단지·동 검색"
@@ -32,7 +47,9 @@ export function ComplexSearch({ complexes, districts }: { complexes: Complex[]; 
       />
       {open && q.trim() && (
         <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
-          {results.length === 0 ? (
+          {results === null ? (
+            <p className="px-4 py-3 text-[13px] text-muted-foreground">찾는 중…</p>
+          ) : results.length === 0 ? (
             <p className="px-4 py-3 text-[13px] text-muted-foreground">검색 결과가 없습니다.</p>
           ) : (
             <ul>
@@ -41,7 +58,7 @@ export function ComplexSearch({ complexes, districts }: { complexes: Complex[]; 
                   <Link href={`/complex/${c.id}`} className="block px-4 py-2.5 text-[14px] hover:bg-muted">
                     {c.name}
                     <span className="ml-2 text-[12px] text-muted-foreground">
-                      {guName.get(c.districtCode)} {c.dong}
+                      {c.guName} {c.dong}
                     </span>
                   </Link>
                 </li>
