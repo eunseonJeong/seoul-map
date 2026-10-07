@@ -5,7 +5,7 @@ import { CheckIcon, ChevronDownIcon } from "lucide-react"
 import { PILL_TRIGGER } from "@/components/calendar"
 import { cn } from "@/lib/utils"
 
-const POPUP = "z-50 rounded-2xl bg-white p-2 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none"
+const POPUP = "z-50 rounded-2xl bg-popover p-2 shadow-[0_8px_30px_rgba(0,0,0,0.16)] outline-none dark:ring-1 dark:ring-foreground/10"
 
 /** 구 다중 선택. 아무것도 고르지 않으면 전체 */
 export function DistrictSelect({
@@ -40,7 +40,7 @@ export function DistrictSelect({
               <Select.Item
                 key={o.code}
                 value={o.code}
-                className="flex h-9 cursor-default items-center justify-between rounded-lg px-3 text-[14px] outline-none select-none data-highlighted:bg-black/[0.05]"
+                className="flex h-9 cursor-default items-center justify-between rounded-lg px-3 text-[14px] outline-none select-none data-highlighted:bg-foreground/[0.05]"
               >
                 <Select.ItemText>{o.name}</Select.ItemText>
                 <Select.ItemIndicator>

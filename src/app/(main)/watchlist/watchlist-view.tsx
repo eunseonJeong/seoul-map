@@ -162,7 +162,7 @@ export function WatchlistView({
                       </div>
                     </div>
 
-                    <div className="mt-2.5 flex items-center gap-2 border-t border-black/5 pt-2 sm:mt-4 sm:pt-3">
+                    <div className="mt-2.5 flex items-center gap-2 border-t border-foreground/5 pt-2 sm:mt-4 sm:pt-3">
                       <MemoInput
                         initial={r.w.memo}
                         onSave={(v) => {
@@ -173,7 +173,7 @@ export function WatchlistView({
                       <button
                         onClick={() => handleRemove(r.w, r.complex.name)}
                         aria-label="관심 단지에서 빼기"
-                        className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-black/5 hover:text-destructive"
+                        className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-foreground/5 hover:text-destructive"
                       >
                         <Trash2Icon className="size-4" />
                       </button>
@@ -233,7 +233,7 @@ function MemoInput({ initial, onSave }: { initial: string; onSave: (v: string) =
       aria-label="메모"
       className={cn(
         "h-8 flex-1 rounded-lg bg-transparent px-2 text-[14px] outline-none placeholder:text-muted-foreground",
-        "hover:bg-black/[0.03] focus:bg-white focus:ring-2 focus:ring-primary/20",
+        "hover:bg-foreground/[0.03] focus:bg-background focus:ring-2 focus:ring-primary/20",
       )}
     />
   )

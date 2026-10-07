@@ -83,7 +83,7 @@ export function ComplexNameInput({
         <ul
           id={listId}
           role="listbox"
-          className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl bg-white p-1 shadow-[0_8px_30px_rgba(0,0,0,0.16)]"
+          className="absolute inset-x-0 top-full z-50 mt-1 max-h-60 overflow-y-auto rounded-xl bg-popover p-1 shadow-[0_8px_30px_rgba(0,0,0,0.16)] dark:ring-1 dark:ring-foreground/10"
         >
           <li className="px-3 pt-1.5 pb-1 text-[11px] font-medium text-muted-foreground">관심 단지</li>
           {filtered.map((o, i) => (
@@ -100,7 +100,7 @@ export function ComplexNameInput({
               onMouseEnter={() => setActive(i)}
               className={cn(
                 "flex cursor-default items-baseline justify-between gap-3 rounded-lg px-3 py-2 text-[14px]",
-                i === active && "bg-black/[0.05]",
+                i === active && "bg-foreground/[0.05]",
               )}
             >
               <span className="truncate font-medium">{o.name}</span>

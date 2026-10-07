@@ -78,7 +78,7 @@ export function DistrictPanel({
         <button
           onClick={onClose}
           aria-label="선택 해제"
-          className="grid size-8 shrink-0 place-items-center rounded-full bg-black/5 text-foreground/60 transition hover:bg-black/10"
+          className="grid size-8 shrink-0 place-items-center rounded-full bg-foreground/5 text-foreground/60 transition hover:bg-foreground/10"
         >
           <XIcon className="size-4" />
         </button>
@@ -161,7 +161,7 @@ export function DistrictPanel({
               <li key={c.id}>
                 <Link
                   href={`/complex/${c.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 text-[14px] transition hover:bg-black/[0.03]"
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-[14px] transition hover:bg-foreground/[0.03]"
                 >
                   <span className="min-w-0 truncate">
                     {c.name}
@@ -260,7 +260,7 @@ function NewsList({ news }: { news: DistrictHighlights["news"] }) {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-3 transition hover:bg-black/[0.03]"
+              className="block px-4 py-3 transition hover:bg-foreground/[0.03]"
             >
               <p className="line-clamp-2 text-[14px] leading-snug">{item.title}</p>
               <p className="mt-1 text-[12px] text-muted-foreground">
@@ -433,7 +433,7 @@ export function DistrictRanking({
             <li key={d.code} className={cn(!onPage(i) && "max-lg:hidden")}>
               <button
                 onClick={() => onSelect(d.code)}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] transition hover:bg-black/[0.03]"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] transition hover:bg-foreground/[0.03]"
               >
                 <span className="tabular w-5 text-[12px] text-muted-foreground">{rank}</span>
                 <span className="flex-1">{d.name}</span>
@@ -484,7 +484,7 @@ function PageButton({
       onClick={onClick}
       className={cn(
         "tabular grid size-8 place-items-center rounded-full text-[13px] transition disabled:pointer-events-none disabled:opacity-30",
-        active ? "bg-foreground font-medium text-background" : "text-foreground/70 hover:bg-black/[0.06]",
+        active ? "bg-foreground font-medium text-background" : "text-foreground/70 hover:bg-foreground/[0.06]",
       )}
     >
       {children}

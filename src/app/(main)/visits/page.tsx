@@ -4,7 +4,7 @@ import { listVisits } from "@/lib/visits"
 import type { WatchOption } from "./complex-name-input"
 import { VisitsView } from "./visits-view"
 
-export const metadata = { title: "임장 노트 · 서울 부동산" }
+export const metadata = { title: "임장 노트 · 모두 부동산" }
 
 export default async function VisitsPage() {
   const user = await requireUser()

@@ -57,14 +57,14 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
         <g>
           {paths.map((p) => {
             const d = byName.get(p.name)
-            const fill = d ? metricColor(metricValue(d, metric), metric, domain) : "#e8e8ed"
+            const fill = d ? metricColor(metricValue(d, metric), metric, domain) : "var(--map-empty)"
             const isSel = d?.code === selected
             return (
               <path
                 key={p.name}
                 d={p.d}
                 fill={fill}
-                stroke="#ffffff"
+                stroke="var(--map-stroke)"
                 strokeWidth={1.2}
                 className="cursor-pointer transition-[filter] duration-200 hover:brightness-95"
                 onMouseEnter={() => setHover(p.name)}
@@ -84,7 +84,7 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
               key={`o-${p.name}`}
               d={p.d}
               fill="none"
-              stroke="#1d1d1f"
+              stroke="var(--map-outline)"
               strokeWidth={byName.get(p.name)?.code === selected ? 2.5 : 1.25}
               pointerEvents="none"
             />
@@ -92,7 +92,7 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
         <g pointerEvents="none">
           {paths.map((p) => {
             const d = byName.get(p.name)
-            const fill = d ? metricColor(metricValue(d, metric), metric, domain) : "#e8e8ed"
+            const fill = d ? metricColor(metricValue(d, metric), metric, domain) : "var(--map-empty)"
             return (
               <text
                 key={`t-${p.name}`}
@@ -102,7 +102,7 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
                 dominantBaseline="middle"
                 fontSize={11}
                 fontWeight={d?.code === selected ? 700 : 500}
-                fill={labelColorFor(fill)}
+                fill={d ? labelColorFor(fill) : "var(--muted-foreground)"}
               >
                 {p.name.replace(/구$/, "")}
               </text>
@@ -113,7 +113,7 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
       </svg>
 
       {hovered && (
-        <div className="pointer-events-none absolute top-3 left-3 rounded-xl bg-white/90 px-3 py-2 text-[13px] shadow-lg ring-1 ring-black/5 backdrop-blur">
+        <div className="pointer-events-none absolute top-3 left-3 rounded-xl bg-background/90 px-3 py-2 text-[13px] shadow-lg ring-1 ring-foreground/5 backdrop-blur">
           <div className="font-semibold">{hovered.name}</div>
           <div className="tabular text-muted-foreground">{formatMetric(metricValue(hovered, metric), metric)}</div>
         </div>

@@ -67,7 +67,7 @@ export function DistrictTable({ rows: input, periodLabel }: { rows: DistrictRow[
         </thead>
         <tbody className="tabular">
           {rows.map((d, i) => (
-            <tr key={d.code} className="border-t border-black/5 transition hover:bg-white/70">
+            <tr key={d.code} className="border-t border-foreground/5 transition hover:bg-background/70">
               <td className="px-3 py-3">
                 <span className="mr-3 inline-block w-5 text-[12px] text-muted-foreground">{i + 1}</span>
                 <span className="font-medium">{d.name}</span>
