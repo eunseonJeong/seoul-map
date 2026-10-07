@@ -10,15 +10,17 @@ import {
   getDistricts,
   listWatchlist,
 } from "@/lib/api"
+import { requireUser } from "@/lib/users"
 import { formatManwon, monthLong } from "@/lib/format"
 
 export default async function HomePage() {
+  const user = await requireUser()
   const [asOf, districts, highlights, memos, watchItems] = await Promise.all([
     getDataAsOf(),
-    getDistricts(),
+    getDistricts(user.id),
     getDistrictHighlights(),
-    getDistrictMemos(),
-    listWatchlist(),
+    getDistrictMemos(user.id),
+    listWatchlist(user.id),
   ])
   // 지도에는 좌표가 있는 관심 단지만 찍는다
   const markers = (await getComplexesByIds([...new Set(watchItems.map((w) => w.complexId))])).filter(

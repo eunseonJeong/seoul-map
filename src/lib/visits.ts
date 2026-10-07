@@ -1,35 +1,47 @@
 // 임장 노트 저장 계층 (visit_note 테이블). API 라우트(src/app/api/visits)와 서버 컴포넌트만 부른다.
 import "server-only"
 
-import { desc, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 import { db } from "@/db"
 import { visitNote } from "@/db/schema"
 import type { VisitInput, VisitNote } from "./types"
 
 type VisitRow = typeof visitNote.$inferSelect
-const toVisit = (r: VisitRow): VisitNote => ({
-  ...r,
-  createdAt: r.createdAt.toISOString(),
-  updatedAt: r.updatedAt.toISOString(),
-})
+const toVisit = (row: VisitRow): VisitNote => {
+  const { userId, ...r } = row
+  void userId // 화면에는 보내지 않는다
+  return { ...r, createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() }
+}
 
-export async function listVisits(): Promise<VisitNote[]> {
-  const rows = await db.select().from(visitNote).orderBy(desc(visitNote.visitDate), desc(visitNote.createdAt))
+export async function listVisits(userId: string): Promise<VisitNote[]> {
+  const rows = await db
+    .select()
+    .from(visitNote)
+    .where(eq(visitNote.userId, userId))
+    .orderBy(desc(visitNote.visitDate), desc(visitNote.createdAt))
   return rows.map(toVisit)
 }
 
-export async function createVisit(input: VisitInput): Promise<VisitNote> {
-  const [row] = await db.insert(visitNote).values(input).returning()
+export async function createVisit(userId: string, input: VisitInput): Promise<VisitNote> {
+  const [row] = await db.insert(visitNote).values({ ...input, userId }).returning()
   return toVisit(row)
 }
 
-export async function updateVisit(id: string, input: VisitInput): Promise<VisitNote | null> {
-  const [row] = await db.update(visitNote).set(input).where(eq(visitNote.id, id)).returning()
+export async function updateVisit(userId: string, id: string, input: VisitInput): Promise<VisitNote | null> {
+  const [row] = await db
+    .update(visitNote)
+    .set(input)
+    .where(and(eq(visitNote.id, id), eq(visitNote.userId, userId)))
+    .returning()
   return row ? toVisit(row) : null
 }
 
-export async function deleteVisit(id: string): Promise<boolean> {
-  return (await db.delete(visitNote).where(eq(visitNote.id, id)).returning({ id: visitNote.id })).length > 0
+export async function deleteVisit(userId: string, id: string): Promise<boolean> {
+  const rows = await db
+    .delete(visitNote)
+    .where(and(eq(visitNote.id, id), eq(visitNote.userId, userId)))
+    .returning({ id: visitNote.id })
+  return rows.length > 0
 }
 
 // ---------- 입력 검증 (DB 연결 후에도 그대로 쓴다) ----------

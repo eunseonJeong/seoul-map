@@ -1,0 +1,1 @@
+ALTER TABLE "district" ADD COLUMN "weekly_change_date" date;

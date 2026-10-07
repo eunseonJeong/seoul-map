@@ -22,6 +22,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core"
 import type { DistrictFeatures } from "@/lib/types"
@@ -40,11 +41,10 @@ export const district = pgTable("district", {
   code: char("code", { length: 5 }).primaryKey(), // 법정동 시군구 코드 (예: 11680)
   name: text("name").notNull(),
   nameEng: text("name_eng").notNull(),
-  summary: text("summary").notNull().default(""),
   population: integer("population"), // 주민등록 인구 (행정안전부), 수집 전에는 null
   populationMonth: char("population_month", { length: 7 }), // 인구 기준월 YYYY-MM
-  features: jsonb("features").$type<DistrictFeatures>().notNull(),
-  weeklyChange: numeric("weekly_change", { precision: 6, scale: 2, mode: "number" }), // % (R-ONE 주간)
+  weeklyChange: numeric("weekly_change", { precision: 6, scale: 2, mode: "number" }), // % (R-ONE 주간 아파트 매매가격지수)
+  weeklyChangeDate: date("weekly_change_date", { mode: "string" }), // 변동률 기준 주 (R-ONE 조사 주 시작일)
   updatedAt: updatedAt(),
 }).enableRLS()
 
@@ -65,18 +65,30 @@ export const districtMonthly = pgTable(
   (t) => [primaryKey({ columns: [t.districtCode, t.month] })],
 ).enableRLS()
 
-// 사용자가 남기는 구 메모
-export const regionFeature = pgTable("region_feature", {
-  districtCode: char("district_code", { length: 5 })
-    .primaryKey()
-    .references(() => district.code, { onDelete: "cascade" }),
-  memo: text("memo").notNull().default(""),
-  updatedAt: updatedAt(),
-}).enableRLS()
+// 사용자가 쓰는 구 소개·특징·메모 (사용자별)
+export const regionFeature = pgTable(
+  "region_feature",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => appUser.id, { onDelete: "cascade" }),
+    districtCode: char("district_code", { length: 5 })
+      .notNull()
+      .references(() => district.code, { onDelete: "cascade" }),
+    summary: text("summary").notNull().default(""),
+    features: jsonb("features")
+      .$type<DistrictFeatures>()
+      .notNull()
+      .default({ transit: [], school: [], life: [], development: [] }),
+    memo: text("memo").notNull().default(""),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.districtCode] })],
+).enableRLS()
 
 // ---------- 단지 · 거래 ----------
 // 국토교통부 실거래가 API 에서 수집한다. 단지 id 는 API 의 aptSeq (예: 11680-218).
-// 세대수·좌표는 실거래 자료에 없어서 비어 있을 수 있다 (공동주택 기본정보·지오코딩으로 채울 예정).
+// 세대수는 K-apt 공동주택 기본정보에서 채운다(src/lib/ingest/kapt.ts). 좌표는 지오코딩 연결 전이라 비어 있다.
 
 export const complex = pgTable(
   "complex",
@@ -90,6 +102,8 @@ export const complex = pgTable(
     address: text("address").notNull(),
     builtYear: smallint("built_year"),
     households: integer("households"),
+    kaptCode: text("kapt_code"), // 공동주택관리정보시스템(K-apt) 단지 코드 (매칭된 단지만)
+    roadAddress: text("road_address"), // K-apt 도로명 주소 (좌표 변환용)
     lat: doublePrecision("lat"),
     lng: doublePrecision("lng"),
   },
@@ -129,10 +143,24 @@ export const trade = pgTable(
 
 // ---------- 사용자 데이터 ----------
 
+// 가입한 사용자. 닉네임은 대소문자 구분 없이 고유하다. 비밀번호는 scrypt 해시만 저장한다.
+export const appUser = pgTable(
+  "app_user",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    nickname: text("nickname").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("app_user_nickname_key").on(sql`lower(${t.nickname})`)],
+).enableRLS()
+
 export const watchlist = pgTable(
   "watchlist",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    // 기존 기록 보존을 위해 비워 둘 수 있다. 첫 가입자가 주인 없는 기록을 넘겨받는다
+    userId: uuid("user_id").references(() => appUser.id, { onDelete: "cascade" }),
     complexId: text("complex_id")
       .notNull()
       .references(() => complex.id, { onDelete: "cascade" }),
@@ -143,13 +171,15 @@ export const watchlist = pgTable(
     memo: text("memo").notNull().default(""),
     createdAt: createdAt(),
   },
-  (t) => [unique("watchlist_complex_area_key").on(t.complexId, t.area)],
+  (t) => [unique("watchlist_user_complex_area_key").on(t.userId, t.complexId, t.area)],
 ).enableRLS()
 
 export const visitNote = pgTable(
   "visit_note",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    // 기존 기록 보존을 위해 비워 둘 수 있다. 첫 가입자가 주인 없는 기록을 넘겨받는다
+    userId: uuid("user_id").references(() => appUser.id, { onDelete: "cascade" }),
     visitDate: date("visit_date", { mode: "string" }).notNull(),
     complexId: text("complex_id").references(() => complex.id, { onDelete: "set null" }),
     complexName: text("complex_name").notNull(),
@@ -175,7 +205,7 @@ export const visitNote = pgTable(
   ],
 ).enableRLS()
 
-// 접속 비밀번호 실패 횟수 (5회 틀리면 15분 잠금)
+// 로그인·가입 실패 횟수 (접속 IP 별, 5회 틀리면 15분 잠금)
 export const unlockAttempt = pgTable("unlock_attempt", {
   clientKey: text("client_key").primaryKey(),
   fails: smallint("fails").notNull().default(0),

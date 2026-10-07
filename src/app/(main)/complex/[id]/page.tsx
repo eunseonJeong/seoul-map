@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
-import { getAreaMonthly, getComplex, getDistrict, getTrades } from "@/lib/api"
+import { getAreaMonthly, getComplex, getDistricts, getTrades } from "@/lib/api"
+import { requireUser } from "@/lib/users"
 import { ComplexView } from "./complex-view"
 
 export default async function ComplexPage(props: PageProps<"/complex/[id]">) {
@@ -7,7 +8,8 @@ export default async function ComplexPage(props: PageProps<"/complex/[id]">) {
   const complex = await getComplex(id)
   if (!complex || complex.areas.length === 0) notFound()
 
-  const district = await getDistrict(complex.districtCode)
+  const user = await requireUser()
+  const district = (await getDistricts(user.id)).find((d) => d.code === complex.districtCode)
   const byArea = await Promise.all(
     complex.areas.map(async (area) => {
       const [monthly, trades] = await Promise.all([getAreaMonthly(complex.id, area), getTrades(complex.id, area)])

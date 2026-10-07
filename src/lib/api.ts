@@ -84,11 +84,13 @@ export const getDataAsOf = cache(async (): Promise<string> => {
 
 // ---------- 구 ----------
 
-export const getDistricts = cache(async (): Promise<District[]> => {
+/** 구 시세(공공) + 그 사용자가 쓴 소개·특징 */
+export const getDistricts = cache(async (userId: string): Promise<District[]> => {
   const asOf = await getDataAsOf()
   const from = addMonths(asOf, -(TREND_MONTHS - 1))
-  const [rows, monthly] = await Promise.all([
+  const [rows, notes, monthly] = await Promise.all([
     db.select().from(district).orderBy(asc(district.code)),
+    db.select().from(regionFeature).where(eq(regionFeature.userId, userId)),
     db
       .select()
       .from(districtMonthly)
@@ -96,7 +98,9 @@ export const getDistricts = cache(async (): Promise<District[]> => {
       .orderBy(asc(districtMonthly.month)),
   ])
 
+  const noteByCode = new Map(notes.map((n) => [n.districtCode, n]))
   return rows.map((d) => {
+    const note = noteByCode.get(d.code)
     const trend: MonthlyPoint[] = monthly
       .filter((m) => m.districtCode === d.code && m.sale != null && m.jeonse != null)
       .map((m) => ({ month: m.month, sale: m.sale!, jeonse: m.jeonse! }))
@@ -106,7 +110,7 @@ export const getDistricts = cache(async (): Promise<District[]> => {
       code: d.code,
       name: d.name,
       nameEng: d.nameEng,
-      summary: d.summary,
+      summary: note?.summary ?? "",
       population: d.population,
       populationMonth: d.populationMonth,
       salePerPyeong: last.sale,
@@ -115,36 +119,37 @@ export const getDistricts = cache(async (): Promise<District[]> => {
       change3m: pct(last.sale, at(addMonths(asOf, -3))?.sale),
       change12m: pct(last.sale, at(addMonths(asOf, -12))?.sale),
       weeklyChange: d.weeklyChange,
+      weeklyChangeDate: d.weeklyChangeDate,
       trend,
-      features: { ...EMPTY_FEATURES, ...d.features },
+      features: { ...EMPTY_FEATURES, ...note?.features },
     }
   })
 })
 
-export async function getDistrict(code: string): Promise<District | undefined> {
-  return (await getDistricts()).find((d) => d.code === code)
+export async function districtExists(code: string) {
+  return (await db.select({ code: district.code }).from(district).where(eq(district.code, code))).length > 0
 }
 
 /** 사용자가 쓰는 구 소개·특징 */
-export async function updateDistrictProfile(code: string, input: { summary: string; features: DistrictFeatures }) {
-  const rows = await db
-    .update(district)
-    .set({ summary: input.summary, features: input.features })
-    .where(eq(district.code, code))
-    .returning({ code: district.code })
-  return rows.length > 0
+export async function updateDistrictProfile(userId: string, code: string, input: { summary: string; features: DistrictFeatures }) {
+  if (!(await districtExists(code))) return false
+  await db
+    .insert(regionFeature)
+    .values({ userId, districtCode: code, ...input })
+    .onConflictDoUpdate({ target: [regionFeature.userId, regionFeature.districtCode], set: input })
+  return true
 }
 
-export async function getDistrictMemos(): Promise<Record<string, string>> {
-  const rows = await db.select().from(regionFeature)
+export async function getDistrictMemos(userId: string): Promise<Record<string, string>> {
+  const rows = await db.select().from(regionFeature).where(eq(regionFeature.userId, userId))
   return Object.fromEntries(rows.map((r) => [r.districtCode, r.memo]))
 }
 
-export async function setDistrictMemo(code: string, memo: string) {
+export async function setDistrictMemo(userId: string, code: string, memo: string) {
   await db
     .insert(regionFeature)
-    .values({ districtCode: code, memo })
-    .onConflictDoUpdate({ target: regionFeature.districtCode, set: { memo } })
+    .values({ userId, districtCode: code, memo })
+    .onConflictDoUpdate({ target: [regionFeature.userId, regionFeature.districtCode], set: { memo } })
 }
 
 type Row<T> = T & Record<string, unknown>
@@ -343,16 +348,18 @@ const toWatchItem = (w: WatchRow): WatchItem => ({
   createdAt: w.createdAt.toISOString(),
 })
 
-export async function listWatchlist(): Promise<WatchItem[]> {
-  return (await db.select().from(watchlist).orderBy(desc(watchlist.createdAt))).map(toWatchItem)
+export async function listWatchlist(userId: string): Promise<WatchItem[]> {
+  return (
+    await db.select().from(watchlist).where(eq(watchlist.userId, userId)).orderBy(desc(watchlist.createdAt))
+  ).map(toWatchItem)
 }
 
-export async function addWatch(input: Omit<WatchItem, "id" | "createdAt">): Promise<WatchItem> {
+export async function addWatch(userId: string, input: Omit<WatchItem, "id" | "createdAt">): Promise<WatchItem> {
   const [row] = await db
     .insert(watchlist)
-    .values(input)
+    .values({ ...input, userId })
     .onConflictDoUpdate({
-      target: [watchlist.complexId, watchlist.area],
+      target: [watchlist.userId, watchlist.complexId, watchlist.area],
       set: {
         baseSalePrice: input.baseSalePrice,
         baseJeonsePrice: input.baseJeonsePrice,
@@ -364,12 +371,20 @@ export async function addWatch(input: Omit<WatchItem, "id" | "createdAt">): Prom
   return toWatchItem(row)
 }
 
-export async function removeWatch(id: string) {
-  return (await db.delete(watchlist).where(eq(watchlist.id, id)).returning({ id: watchlist.id })).length > 0
+export async function removeWatch(userId: string, id: string) {
+  const rows = await db
+    .delete(watchlist)
+    .where(and(eq(watchlist.id, id), eq(watchlist.userId, userId)))
+    .returning({ id: watchlist.id })
+  return rows.length > 0
 }
 
-export async function updateWatchMemo(id: string, memo: string) {
-  const [row] = await db.update(watchlist).set({ memo }).where(eq(watchlist.id, id)).returning()
+export async function updateWatchMemo(userId: string, id: string, memo: string) {
+  const [row] = await db
+    .update(watchlist)
+    .set({ memo })
+    .where(and(eq(watchlist.id, id), eq(watchlist.userId, userId)))
+    .returning()
   return row ? toWatchItem(row) : null
 }
 

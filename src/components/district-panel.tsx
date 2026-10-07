@@ -86,14 +86,10 @@ export function DistrictPanel({
         <Stat label="1년 변동" value={<Change value={district.change12m} />} />
         <Stat label="3개월 변동" value={<Change value={district.change3m} />} />
         <Stat label="전세가율" value={`${district.jeonseRatio.toFixed(1)}%`} />
-        {district.weeklyChange != null ? (
-          <Stat label="주간 변동 (R-ONE)" value={<Change value={district.weeklyChange} digits={2} />} />
-        ) : (
-          <Stat
-            label={district.populationMonth ? `인구 (${monthLong(district.populationMonth)})` : "인구"}
-            value={district.population != null ? formatPopulation(district.population) : "—"}
-          />
-        )}
+        <Stat
+          label={district.weeklyChangeDate ? `주간 변동 (${shortDate(district.weeklyChangeDate)} 주)` : "주간 변동"}
+          value={<Change value={district.weeklyChange} digits={2} />}
+        />
       </dl>
 
       <div>
@@ -132,7 +128,7 @@ export function DistrictPanel({
         )}
       </div>
 
-      <InfraStats stat={highlights.stat} />
+      <InfraStats stat={highlights.stat} district={district} />
 
       <NewsList news={highlights.news} />
 
@@ -195,12 +191,25 @@ export function DistrictPanel({
   )
 }
 
-function InfraStats({ stat }: { stat: DistrictStat | null }) {
-  if (!stat) return <p className="text-[12px] text-muted-foreground">지하철역·학교·학원 통계는 아직 수집 전입니다.</p>
+function InfraStats({ stat, district }: { stat: DistrictStat | null; district: District }) {
+  const population =
+    district.population != null
+      ? `인구 ${formatPopulation(district.population)}${district.populationMonth ? ` (${monthLong(district.populationMonth)})` : ""}`
+      : null
+  if (!stat) {
+    return (
+      <p className="text-[12px] text-muted-foreground">
+        {population ? `${population} · ` : ""}지하철역·학교·학원 통계는 아직 수집 전입니다.
+      </p>
+    )
+  }
   const n = (v: number | null) => (v == null ? "—" : v.toLocaleString())
   return (
     <div>
-      <h4 className="mb-2 text-[15px] font-semibold">생활 인프라</h4>
+      <div className="mb-2 flex items-baseline justify-between">
+        <h4 className="text-[15px] font-semibold">생활 인프라</h4>
+        {population && <span className="text-[12px] text-muted-foreground">{population}</span>}
+      </div>
       <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-border/60">
         <Stat label="지하철역" value={`${n(stat.subwayStations)}곳`} />
         <Stat label="초·중·고" value={`${n(stat.elementarySchools)}·${n(stat.middleSchools)}·${n(stat.highSchools)}`} />
@@ -210,11 +219,14 @@ function InfraStats({ stat }: { stat: DistrictStat | null }) {
         <p className="mt-2 text-[12px] text-muted-foreground">노선: {stat.subwayLines.join(", ")}</p>
       )}
       <p className="mt-1 text-[12px] text-muted-foreground">
-        학원 {n(stat.academies)} · 교습소 {n(stat.tutoringCenters)} · 출처: 서울 열린데이터광장, 교육부 NEIS
+        학원 {n(stat.academies)} · 교습소 {n(stat.tutoringCenters)}
       </p>
     </div>
   )
 }
+
+/** "2026-09-28" → "9월 28일" */
+const shortDate = (date: string) => `${Number(date.slice(5, 7))}월 ${Number(date.slice(8, 10))}일`
 
 function NewsList({ news }: { news: DistrictHighlights["news"] }) {
   if (news.length === 0) return null

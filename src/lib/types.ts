@@ -29,7 +29,8 @@ export interface District {
   jeonseRatio: number // %
   change3m: number // %
   change12m: number // %
-  weeklyChange: number | null // % (R-ONE 주간 변동률, 연결 전에는 null)
+  weeklyChange: number | null // % (R-ONE 주간 아파트 매매가격 변동률)
+  weeklyChangeDate: string | null // 변동률 기준 주 YYYY-MM-DD
   trend: MonthlyPoint[]
   features: DistrictFeatures // 사용자가 직접 쓴다
 }

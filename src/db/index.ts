@@ -8,14 +8,19 @@ import * as schema from "./schema"
 const url = process.env.DATABASE_URL
 if (!url) throw new Error("DATABASE_URL 환경변수를 설정하세요. (.env.example 참고)")
 
-// Supabase Transaction pooler(6543)는 prepared statement 를 지원하지 않는다 → prepare: false
-// pooler 가 오래 쉰 연결을 조용히 끊으면 그 연결로 보낸 쿼리가 끝없이 기다린다.
-// 쉬는 연결은 먼저 닫고(idle_timeout), 오래된 연결은 갈아 끼우고(max_lifetime), 접속은 10초 안에 포기한다.
+// Supabase Session pooler(5432)로 연결한다.
+// Transaction pooler(6543)는 여러 요청이 동시에 쿼리를 보내면 일부가 pooler 안에서 끝없이 멈춰서 쓰지 않는다.
+// - max: 3 — Session 방식은 연결 하나가 DB 세션 하나를 차지한다. 서버리스 인스턴스가 여럿 떠도 한도(15)를 넘지 않게
+// - prepare: false — pooler 를 거치므로 prepared statement 를 쓰지 않는다
+// - fetch_types: false — 연결마다 하는 타입 조회를 끈다 (배열 타입을 쓰지 않는다)
+// - pooler 가 오래 쉰 연결을 조용히 끊으면 그 연결로 보낸 쿼리가 끝없이 기다린다.
+//   쉬는 연결은 먼저 닫고(idle_timeout), 오래된 연결은 갈아 끼우고(max_lifetime), 접속은 10초 안에 포기한다.
 // 개발 서버 핫 리로드 때 커넥션이 쌓이지 않도록 globalThis 에 둔다
 const store = globalThis as unknown as { __pgPool?: postgres.Sql }
 const client = (store.__pgPool ??= postgres(url, {
   prepare: false,
-  max: 5,
+  fetch_types: false,
+  max: 3,
   idle_timeout: 20,
   max_lifetime: 60 * 10,
   connect_timeout: 10,

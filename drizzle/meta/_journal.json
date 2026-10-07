@@ -36,6 +36,27 @@
       "when": 1791168644689,
       "tag": "0004_district_news",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791357185247,
+      "tag": "0005_weekly_change_date",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791357767214,
+      "tag": "0006_complex_kapt",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791359524896,
+      "tag": "0007_users",
+      "breakpoints": true
     }
   ]
 }

@@ -11,7 +11,6 @@ export default defineConfig({
   schema: "./src/db/schema.ts",
   out: "./drizzle",
   dialect: "postgresql",
-  // 마이그레이션은 Session pooler(같은 호스트, 5432)로 실행한다.
-  // Transaction pooler(6543)는 마이그레이션의 트랜잭션·prepared statement 와 맞지 않는다.
+  // Session pooler(5432). 예전 Transaction pooler(6543) 주소가 들어 있어도 5432 로 바꿔 쓴다
   dbCredentials: { url: url.replace(":6543/", ":5432/") },
 })

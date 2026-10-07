@@ -1,11 +1,13 @@
 import { getAreaMonthly, getComplexesByIds, getDistricts, listWatchlist } from "@/lib/api"
 import { latestPrice } from "@/lib/price"
+import { requireUser } from "@/lib/users"
 import { WatchlistView, type PriceSnapshot } from "./watchlist-view"
 
 export const metadata = { title: "관심 단지 · 서울 부동산" }
 
 export default async function WatchlistPage() {
-  const [items, districts] = await Promise.all([listWatchlist(), getDistricts()])
+  const user = await requireUser()
+  const [items, districts] = await Promise.all([listWatchlist(user.id), getDistricts(user.id)])
   const complexes = await getComplexesByIds([...new Set(items.map((w) => w.complexId))])
 
   // 체크한 단지·면적의 최신 실거래 중위가

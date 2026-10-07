@@ -1,10 +1,12 @@
 import { getDistricts } from "@/lib/api"
+import { requireUser } from "@/lib/users"
 import { DistrictTable } from "./district-table"
 
 export const metadata = { title: "구별 시세 · 서울 부동산" }
 
 export default async function DistrictsPage() {
-  const districts = await getDistricts()
+  const user = await requireUser()
+  const districts = await getDistricts(user.id)
   return (
     <>
       <section className="px-4 pt-14 pb-10 text-center sm:pt-20">

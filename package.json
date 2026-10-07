@@ -14,7 +14,9 @@
     "ingest": "tsx scripts/ingest.mts",
     "ingest:population": "tsx scripts/ingest-population.mts",
     "ingest:stats": "tsx scripts/ingest-stats.mts",
-    "ingest:news": "tsx scripts/ingest-news.mts"
+    "ingest:news": "tsx scripts/ingest-news.mts",
+    "ingest:weekly": "tsx scripts/ingest-weekly.mts",
+    "ingest:households": "tsx scripts/ingest-households.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
