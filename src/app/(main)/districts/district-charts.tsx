@@ -82,7 +82,7 @@ export function DistrictCharts({
                   />
                 }
               />
-              <Bar dataKey="value" radius={4} maxBarSize={22}>
+              <Bar animationDuration={700} animationEasing="ease-out" dataKey="value" radius={4} maxBarSize={22}>
                 {bars.map((b) => (
                   <Cell key={b.name} fill={metric === "periodChange" ? (b.value >= 0 ? UP : DOWN) : SALE} />
                 ))}
@@ -173,6 +173,8 @@ function TrendChart({ districts, from, to }: { districts: District[]; from: stri
             {districts.map((d, i) => (
               <Line
                 key={d.code}
+                animationDuration={700}
+                animationEasing="ease-out"
                 dataKey={d.code}
                 type="monotone"
                 stroke={SERIES[i]}

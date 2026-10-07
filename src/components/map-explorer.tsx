@@ -75,12 +75,15 @@ export function MapExplorer({
               </span>
               <span className="tabular">{legend.max}</span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5">
-                <span className="size-2.5 rounded-full border border-foreground bg-[#ff9500]" />
-                관심 단지
-              </span>
-            </div>
+            {/* 좌표가 있는 관심 단지가 있을 때만 (좌표 수집 전에는 지도에 점이 찍히지 않는다) */}
+            {markers.some((c) => watchedIds.has(c.id) && c.lat != null && c.lng != null) && (
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-full border border-foreground bg-[#ff9500]" />
+                  관심 단지
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

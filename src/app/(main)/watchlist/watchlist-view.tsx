@@ -5,6 +5,8 @@ import { useMemo, useState } from "react"
 import { ChevronRightIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 import { Change, ChangePill } from "@/components/change"
+import { motion } from "motion/react"
+import { CountUp, Reveal, TiltCard } from "@/components/motion"
 import { Segmented } from "@/components/segmented"
 import { areaLabel, changePct, formatPrice } from "@/lib/format"
 import { useRouter } from "next/navigation"
@@ -85,14 +87,16 @@ export function WatchlistView({
             <>
               {/* 모바일에서도 네 장을 한눈에: 2×2 */}
               <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-                <Tile label="체크한 단지" value={`${items.length}곳`} />
-                <Tile label="평균 변동" value={<Change value={avg} />} />
+                <Tile index={0} label="체크한 단지" value={<CountUp value={items.length} suffix="곳" duration={0.6} />} />
+                <Tile index={1} label="평균 변동" value={<Change value={avg} />} />
                 <Tile
+                  index={2}
                   label="가장 많이 오른"
                   value={best ? best.complex.name : "—"}
                   sub={best ? <Change value={best.change} /> : null}
                 />
                 <Tile
+                  index={3}
                   label={worst && worst.change! < 0 ? "가장 많이 내린" : "가장 적게 오른"}
                   value={worst && worst !== best ? worst.complex.name : "—"}
                   sub={worst && worst !== best ? <Change value={worst.change} /> : null}
@@ -121,8 +125,22 @@ export function WatchlistView({
               </div>
 
               <ul className="mt-5 space-y-2 sm:space-y-3">
-                {rows.map((r) => (
-                  <li key={r.w.id} className="rounded-[20px] bg-muted px-4 py-3.5 sm:rounded-[24px] sm:p-6">
+                {rows.map((r, i) => (
+                  <motion.li
+                    key={r.w.id}
+                    // 처음엔 차례로 떠오르고, 정렬을 바꾸면 새 자리로 미끄러진다
+                    layout
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{
+                      opacity: 1,
+                      y: 0,
+                      transition: { duration: 0.5, delay: Math.min(i, 8) * 0.05, ease: [0.22, 1, 0.36, 1] },
+                    }}
+                    whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                    viewport={{ once: true, margin: "0px 0px -40px 0px" }}
+                    transition={{ type: "spring", stiffness: 400, damping: 36 }}
+                    className="rounded-[20px] bg-muted px-4 py-3.5 transition-shadow hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] sm:rounded-[24px] sm:p-6 dark:hover:shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
+                  >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                       <div className="flex items-start gap-3 sm:min-w-0 sm:flex-1">
                         <div className="min-w-0 flex-1">
@@ -178,7 +196,7 @@ export function WatchlistView({
                         <Trash2Icon className="size-4" />
                       </button>
                     </div>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
               <p className="mt-4 text-center text-[12px] text-muted-foreground">
@@ -192,13 +210,15 @@ export function WatchlistView({
   )
 }
 
-function Tile({ label, value, sub }: { label: string; value: React.ReactNode; sub?: React.ReactNode }) {
+function Tile({ index, label, value, sub }: { index: number; label: string; value: React.ReactNode; sub?: React.ReactNode }) {
   return (
-    <div className="min-w-0 rounded-[20px] bg-muted px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-7">
-      <p className="text-[12px] font-medium text-muted-foreground sm:text-[13px]">{label}</p>
-      <p className="tabular mt-1 truncate text-[18px] leading-tight font-semibold sm:mt-2 sm:text-[24px]">{value}</p>
-      {sub && <p className="mt-1 text-[13px] sm:text-[15px]">{sub}</p>}
-    </div>
+    <Reveal delay={index * 0.08} className="h-full min-w-0">
+      <TiltCard className="h-full rounded-[20px] bg-muted px-4 py-4 sm:rounded-[28px] sm:px-6 sm:py-7">
+        <p className="text-[12px] font-medium text-muted-foreground sm:text-[13px]">{label}</p>
+        <p className="tabular mt-1 truncate text-[18px] leading-tight font-semibold sm:mt-2 sm:text-[24px]">{value}</p>
+        {sub && <p className="mt-1 text-[13px] sm:text-[15px]">{sub}</p>}
+      </TiltCard>
+    </Reveal>
   )
 }
 

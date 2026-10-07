@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "motion/react"
 import { geoMercator, geoPath } from "d3-geo"
 import type { Feature, FeatureCollection, Geometry } from "geojson"
 import seoulGeo from "@/data/seoul-gu.json"
@@ -66,7 +67,7 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
                 fill={fill}
                 stroke="var(--map-stroke)"
                 strokeWidth={1.2}
-                className="cursor-pointer transition-[filter] duration-200 hover:brightness-95"
+                className="cursor-pointer"
                 onMouseEnter={() => setHover(p.name)}
                 onMouseLeave={() => setHover((h) => (h === p.name ? null : h))}
                 onClick={() => d && onSelect(isSel ? null : d.code)}
@@ -76,9 +77,9 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
             )
           })}
         </g>
-        {/* 선택·호버 테두리는 맨 위에 다시 그려 이웃 구에 가리지 않게 */}
+        {/* 선택 테두리는 맨 위에 다시 그려 이웃 구에 가리지 않게 */}
         {paths
-          .filter((p) => byName.get(p.name)?.code === selected || p.name === hover)
+          .filter((p) => byName.get(p.name)?.code === selected)
           .map((p) => (
             <path
               key={`o-${p.name}`}
@@ -89,6 +90,25 @@ export function SvgMap({ districts, metric, domain, selected, onSelect, complexe
               pointerEvents="none"
             />
           ))}
+        {/* 마우스를 올린 구: 살짝 키우고 그림자를 깔아 떠오른 것처럼 */}
+        {paths
+          .filter((p) => p.name === hover)
+          .map((p) => {
+            const d = byName.get(p.name)
+            return (
+              <motion.path
+                key={`lift-${p.name}`}
+                d={p.d}
+                fill={d ? metricColor(metricValue(d, metric), metric, domain) : "var(--map-empty)"}
+                stroke="var(--map-outline)"
+                strokeWidth={1.5}
+                pointerEvents="none"
+                initial={{ scale: 1, filter: "drop-shadow(0 0 0 rgb(0 0 0 / 0))" }}
+                animate={{ scale: 1.08, filter: "drop-shadow(0 6px 8px rgb(0 0 0 / 0.28))" }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              />
+            )
+          })}
         <g pointerEvents="none">
           {paths.map((p) => {
             const d = byName.get(p.name)

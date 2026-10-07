@@ -17,6 +17,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // 로그인·가입 화면과 인증 API, cron(자체 비밀값으로 확인)은 통과시킨다
-  matcher: ["/((?!login|signup|api/auth|api/cron|_next/static|_next/image|favicon.ico).*)"],
+  // 로그인·가입 화면과 인증 API, cron(자체 비밀값으로 확인), 정적 이미지(로고·파비콘)는 통과시킨다
+  matcher: ["/((?!login|signup|api/auth|api/cron|_next/static|_next/image|favicon.ico|modoobudongsan_favicon.ico|logo/).*)"],
 }

@@ -7,7 +7,6 @@ import {
   ChevronRightIcon,
   ConstructionIcon,
   GraduationCapIcon,
-  NewspaperIcon,
   PencilIcon,
   SearchIcon,
   ShoppingBagIcon,
